@@ -1,8 +1,20 @@
-import { useState, useEffect, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { ContentIdea, NewContentIdea } from '@/types/content'
 
-export function useIdeas() {
+interface IdeasContextValue {
+  ideas: ContentIdea[]
+  loading: boolean
+  error: string | null
+  add: (idea: NewContentIdea) => Promise<ContentIdea>
+  update: (id: string, changes: Partial<ContentIdea>) => Promise<void>
+  remove: (id: string) => Promise<void>
+  refresh: () => Promise<void>
+}
+
+const IdeasContext = createContext<IdeasContextValue | null>(null)
+
+export function IdeasProvider({ children }: { children: ReactNode }) {
   const [ideas, setIdeas] = useState<ContentIdea[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -46,5 +58,12 @@ export function useIdeas() {
     setIdeas(prev => prev.filter(i => i.id !== id))
   }
 
-  return { ideas, loading, error, add, update, remove, refresh: load }
+  const value: IdeasContextValue = { ideas, loading, error, add, update, remove, refresh: load }
+  return <IdeasContext.Provider value={value}>{children}</IdeasContext.Provider>
+}
+
+export function useIdeas(): IdeasContextValue {
+  const ctx = useContext(IdeasContext)
+  if (!ctx) throw new Error('useIdeas must be used within an IdeasProvider')
+  return ctx
 }

@@ -23,6 +23,14 @@ export default function Analytics() {
     })
   }
 
+  const handleCancel = (id: string) => {
+    setEditing(prev => {
+      const next = { ...prev }
+      delete next[id]
+      return next
+    })
+  }
+
   if (loading) return <p className="text-gray-600 text-sm">Loading...</p>
 
   return (
@@ -58,12 +66,20 @@ export default function Analytics() {
               ))}
             </div>
             {isEditing && (
-              <button
-                onClick={() => void handleSave(idea.id)}
-                className="bg-accent text-white text-xs rounded px-3 py-1 self-start"
-              >
-                Save + Mark Tracked
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => void handleSave(idea.id)}
+                  className="bg-accent text-white text-xs rounded px-3 py-1"
+                >
+                  Save + Mark Tracked
+                </button>
+                <button
+                  onClick={() => handleCancel(idea.id)}
+                  className="bg-surface border border-border text-gray-400 text-xs rounded px-3 py-1"
+                >
+                  Cancel
+                </button>
+              </div>
             )}
           </div>
         )

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { renderHook } from '@testing-library/react'
-import { useIdeas } from '@/hooks/useIdeas'
+import { useIdeas, IdeasProvider } from '@/hooks/useIdeas'
 
 vi.mock('@/lib/supabase', () => ({
   supabase: {
@@ -25,7 +25,9 @@ vi.mock('@/lib/supabase', () => ({
 
 describe('useIdeas', () => {
   it('initializes with empty array', async () => {
-    const { result } = renderHook(() => useIdeas())
+    const { result } = renderHook(() => useIdeas(), {
+      wrapper: ({ children }) => <IdeasProvider>{children}</IdeasProvider>,
+    })
     expect(result.current.ideas).toEqual([])
   })
 })
