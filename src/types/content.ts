@@ -1,4 +1,4 @@
-export type Pillar = 'training' | 'mindset' | 'faith' | 'tech' | 'life' | 'building'
+export type Pillar = 'training' | 'diet' | 'mindset' | 'life'
 export type Platform = 'tiktok' | 'instagram' | 'both'
 export type PipelineStatus = 'IDEA' | 'DRAFT' | 'READY' | 'SCHEDULED' | 'POSTED' | 'TRACKED'
 
@@ -17,6 +17,7 @@ export type ContentIdea = {
   likes: number | null
   shares: number | null
   saves: number | null
+  post_url: string | null
   created_at: string
 }
 

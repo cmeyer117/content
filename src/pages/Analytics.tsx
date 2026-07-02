@@ -48,6 +48,19 @@ export default function Analytics() {
               <PillarBadge pillar={idea.pillar} />
               <p className="text-sm font-medium text-white">{idea.title}</p>
             </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-500 uppercase tracking-wide">Post URL (auto-syncs TikTok stats nightly)</label>
+              <input
+                type="url"
+                placeholder="https://www.tiktok.com/@you/video/..."
+                className="bg-surface border border-border rounded px-2 py-1 text-sm text-white w-full"
+                value={draft.post_url ?? idea.post_url ?? ''}
+                onChange={e => setEditing(prev => ({
+                  ...prev,
+                  [idea.id]: { ...(prev[idea.id] ?? {}), post_url: e.target.value || null },
+                }))}
+              />
+            </div>
             <div className="grid grid-cols-4 gap-3">
               {METRICS.map(m => (
                 <div key={m} className="flex flex-col gap-1">

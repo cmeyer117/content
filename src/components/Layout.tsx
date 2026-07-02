@@ -6,6 +6,7 @@ const nav = [
   { to: '/ideas', label: 'Ideas' },
   { to: '/pipeline', label: 'Pipeline' },
   { to: '/analytics', label: 'Analytics' },
+  { to: '/intel', label: 'Intel' },
 ]
 
 export default function Layout({ children }: { children: ReactNode }) {

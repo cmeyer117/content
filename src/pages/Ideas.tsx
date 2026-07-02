@@ -18,6 +18,7 @@ const empty: NewContentIdea = {
   likes: null,
   shares: null,
   saves: null,
+  post_url: null,
 }
 
 export default function Ideas() {
