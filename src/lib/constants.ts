@@ -5,6 +5,7 @@ export const PILLARS: { value: Pillar; label: string; color: string }[] = [
   { value: 'diet', label: 'Diet', color: 'bg-yellow-900 text-yellow-200' },
   { value: 'mindset', label: 'Mindset', color: 'bg-purple-900 text-purple-200' },
   { value: 'life', label: 'Life', color: 'bg-green-900 text-green-200' },
+  { value: 'faith', label: 'Faith', color: 'bg-blue-900 text-blue-200' },
 ]
 
 export const PIPELINE_STAGES: PipelineStatus[] = [

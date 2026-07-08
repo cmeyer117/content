@@ -1,4 +1,4 @@
-export type Pillar = 'training' | 'diet' | 'mindset' | 'life'
+export type Pillar = 'training' | 'diet' | 'mindset' | 'life' | 'faith'
 export type Platform = 'tiktok' | 'instagram' | 'both'
 export type PipelineStatus = 'IDEA' | 'DRAFT' | 'READY' | 'SCHEDULED' | 'POSTED' | 'TRACKED'
 
