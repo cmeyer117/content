@@ -1,7 +1,7 @@
 import type { ContentIdea, PipelineStatus } from '@/types/content'
 import PillarBadge from './PillarBadge'
 import StatusBadge from './StatusBadge'
-import { PIPELINE_STAGES } from '@/lib/constants'
+import { PIPELINE_STAGES, SUGGESTED_DAYS } from '@/lib/constants'
 
 type Props = {
   idea: ContentIdea
@@ -39,6 +39,9 @@ export default function IdeaCard({ idea, onMove, onDelete }: Props) {
         >
           Move → {nextStage}
         </button>
+      )}
+      {nextStage === 'SCHEDULED' && (
+        <p className="text-xs text-gray-600">Suggested: {SUGGESTED_DAYS[idea.platform]}</p>
       )}
     </div>
   )

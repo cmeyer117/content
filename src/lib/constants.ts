@@ -16,3 +16,12 @@ export const PLATFORMS: { value: Platform; label: string }[] = [
   { value: 'instagram', label: 'Instagram' },
   { value: 'both', label: 'Both' },
 ]
+
+// ponytail: day-of-week defaults from general niche research (Algorithm Playbook,
+// Carl Meyer/09 - Content & Marketing). Swap for a real per-account model once
+// performance-sync.js has 15-20+ TRACKED posts with actual view data.
+export const SUGGESTED_DAYS: Record<Platform, string> = {
+  tiktok: 'Sat or Mon',
+  instagram: 'Wed or Thu',
+  both: 'TikTok: Sat/Mon · IG: Wed/Thu',
+}
