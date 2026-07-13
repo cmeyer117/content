@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useIdeas } from '@/hooks/useIdeas'
 import IdeaCard from '@/components/IdeaCard'
+import IdeaDetailModal from '@/components/IdeaDetailModal'
 import { PILLARS, PLATFORMS } from '@/lib/constants'
-import type { Pillar, Platform, NewContentIdea } from '@/types/content'
+import type { Pillar, Platform, NewContentIdea, ContentIdea } from '@/types/content'
 
 const empty: NewContentIdea = {
   title: '',
@@ -26,6 +27,7 @@ export default function Ideas() {
   const [form, setForm] = useState<NewContentIdea>(empty)
   const [saving, setSaving] = useState(false)
   const [filterPillar, setFilterPillar] = useState<Pillar | 'all'>('all')
+  const [selectedIdea, setSelectedIdea] = useState<ContentIdea | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -114,12 +116,20 @@ export default function Ideas() {
               idea={idea}
               onMove={(id, status) => void update(id, { status })}
               onDelete={(id) => void remove(id)}
+              onOpen={setSelectedIdea}
             />
           ))}
           {filtered.length === 0 && (
             <p className="text-gray-600 text-sm">No ideas yet. Add one above.</p>
           )}
         </div>
+      )}
+      {selectedIdea && (
+        <IdeaDetailModal
+          idea={selectedIdea}
+          onClose={() => setSelectedIdea(null)}
+          onSave={update}
+        />
       )}
     </div>
   )
