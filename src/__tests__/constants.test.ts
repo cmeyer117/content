@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { PILLARS, PIPELINE_STAGES, PLATFORMS } from '@/lib/constants'
 
 describe('constants', () => {
-  it('has 4 pillars', () => {
-    expect(PILLARS).toHaveLength(4)
+  it('has 5 pillars', () => {
+    expect(PILLARS).toHaveLength(5)
   })
 
   it('has 6 pipeline stages in correct order', () => {
