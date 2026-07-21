@@ -18,6 +18,10 @@ export type ContentIdea = {
   shares: number | null
   saves: number | null
   post_url: string | null
+  idea_score: number | null
+  idea_score_notes: string | null
+  execution_score: number | null
+  execution_score_notes: string | null
   created_at: string
 }
 

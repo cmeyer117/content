@@ -19,6 +19,10 @@ const idea: ContentIdea = {
   shares: null,
   saves: null,
   post_url: null,
+  idea_score: null,
+  idea_score_notes: null,
+  execution_score: null,
+  execution_score_notes: null,
   created_at: '2026-07-13T00:00:00.000Z',
 }
 

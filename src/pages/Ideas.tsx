@@ -20,6 +20,10 @@ const empty: NewContentIdea = {
   shares: null,
   saves: null,
   post_url: null,
+  idea_score: null,
+  idea_score_notes: null,
+  execution_score: null,
+  execution_score_notes: null,
 }
 
 export default function Ideas() {
