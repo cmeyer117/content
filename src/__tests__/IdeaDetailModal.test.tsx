@@ -60,4 +60,60 @@ describe('IdeaDetailModal', () => {
     fireEvent.click(screen.getByRole('button', { name: /close/i }))
     expect(onClose).toHaveBeenCalled()
   })
+
+  it('renders existing score fields', () => {
+    const scored: ContentIdea = {
+      ...idea,
+      idea_score: 8,
+      idea_score_notes: 'Strong hook pattern-fit',
+      execution_score: 6,
+      execution_score_notes: 'Delivery was flat',
+    }
+    render(<IdeaDetailModal idea={scored} onClose={() => {}} onSave={async () => {}} />)
+    expect(screen.getByDisplayValue('8')).toBeTruthy()
+    expect(screen.getByDisplayValue('Strong hook pattern-fit')).toBeTruthy()
+    expect(screen.getByDisplayValue('6')).toBeTruthy()
+    expect(screen.getByDisplayValue('Delivery was flat')).toBeTruthy()
+  })
+
+  it('saves a blank score as null, not 0', async () => {
+    const scored: ContentIdea = { ...idea, idea_score: 7 }
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    render(<IdeaDetailModal idea={scored} onClose={() => {}} onSave={onSave} />)
+
+    fireEvent.change(screen.getByDisplayValue('7'), { target: { value: '' } })
+    fireEvent.click(screen.getByRole('button', { name: /save/i }))
+
+    expect(onSave).toHaveBeenCalledWith('idea-1', expect.objectContaining({
+      idea_score: null,
+    }))
+  })
+
+  it('clamps an out-of-range score to 10 on save', async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    render(<IdeaDetailModal idea={idea} onClose={() => {}} onSave={onSave} />)
+
+    fireEvent.change(screen.getByPlaceholderText('Idea Score (1-10)'), {
+      target: { value: '99' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /save/i }))
+
+    expect(onSave).toHaveBeenCalledWith('idea-1', expect.objectContaining({
+      idea_score: 10,
+    }))
+  })
+
+  it('clamps a below-range score to 1 on save', async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    render(<IdeaDetailModal idea={idea} onClose={() => {}} onSave={onSave} />)
+
+    fireEvent.change(screen.getByPlaceholderText('Execution Score (1-10)'), {
+      target: { value: '0' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /save/i }))
+
+    expect(onSave).toHaveBeenCalledWith('idea-1', expect.objectContaining({
+      execution_score: 1,
+    }))
+  })
 })
