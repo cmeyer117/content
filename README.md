@@ -1,32 +1,21 @@
-# React + TypeScript + Vite
+# Content Manager
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Carl Meyer's content strategy/pipeline manager for TikTok/Instagram — React 19 + TypeScript + Vite + Supabase. Deployed to Vercel at [content-nine-chi.vercel.app](https://content-nine-chi.vercel.app).
 
-Currently, two official plugins are available:
+## Pages
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+| Page | What it is |
+|---|---|
+| `Dashboard` | Overview |
+| `Ideas` | Content idea editor — captures/edits draft ideas (chat-driven AI drafting, zero API cost by design) |
+| `Pipeline` | Content lifecycle: `draft → scheduled → published → archived` |
+| `Intel` | Creator Intelligence insights — synthesized data from tracked competitor/niche creators (`creator_insights` Supabase table, fed by the separate `creator-intelligence` repo's scraper) |
+| `Analytics` | Performance tracking |
 
-## React Compiler
+## Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Frontend: React 19, TypeScript, Vite, Tailwind, react-router-dom
+- Persistence: Supabase
+- Tests: Vitest
 
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-```
-
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+See `docs/` for design specs, and `G:\My Drive\Claude\HANDOFF.md` / `project-content-manager-strategy-prompt.md` (Claude memory) for current status and standing decisions (e.g. AI drafting stays chat-driven rather than an in-app API-billed button).
