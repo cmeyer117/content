@@ -46,4 +46,22 @@ describe('IdeaCard', () => {
     expect(onDelete).toHaveBeenCalledWith('idea-1')
     expect(onOpen).not.toHaveBeenCalled()
   })
+
+  it('shows an idea score badge when idea_score is set', () => {
+    const scored = { ...idea, idea_score: 8 }
+    render(<IdeaCard idea={scored} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} />)
+    expect(screen.getByText('🎯 8')).toBeTruthy()
+  })
+
+  it('shows an execution score badge when execution_score is set', () => {
+    const scored = { ...idea, execution_score: 6 }
+    render(<IdeaCard idea={scored} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} />)
+    expect(screen.getByText('🎬 6')).toBeTruthy()
+  })
+
+  it('shows no score badges when both scores are null', () => {
+    render(<IdeaCard idea={idea} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} />)
+    expect(screen.queryByText(/🎯/)).toBeNull()
+    expect(screen.queryByText(/🎬/)).toBeNull()
+  })
 })

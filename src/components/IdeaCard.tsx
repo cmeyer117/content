@@ -35,6 +35,12 @@ export default function IdeaCard({ idea, onMove, onDelete, onOpen }: Props) {
         <PillarBadge pillar={idea.pillar} />
         <StatusBadge status={idea.status} />
         <span className="text-xs text-gray-600">{idea.platform}</span>
+        {idea.idea_score != null && (
+          <span className="text-xs text-gray-400">🎯 {idea.idea_score}</span>
+        )}
+        {idea.execution_score != null && (
+          <span className="text-xs text-gray-400">🎬 {idea.execution_score}</span>
+        )}
       </div>
       {nextStage && (
         <button
