@@ -32,3 +32,6 @@ dist-ssr
 
 # Build info
 *.tsbuildinfo
+
+.vercel
+.env*
