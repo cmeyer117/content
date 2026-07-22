@@ -18,7 +18,7 @@ export default function PushSubscribeButton() {
 
   useEffect(() => {
     const canPush = 'serviceWorker' in navigator && 'PushManager' in window
-    const alreadySubscribed = localStorage.getItem('content_push_subscribed')
+    const alreadySubscribed = localStorage.getItem('content_push_subscribed_v2')
     const denied = canPush && Notification.permission === 'denied'
     setVisible(canPush && !alreadySubscribed && !denied)
   }, [])
@@ -53,7 +53,7 @@ export default function PushSubscribeButton() {
         setBusy(false)
         return
       }
-      localStorage.setItem('content_push_subscribed', '1')
+      localStorage.setItem('content_push_subscribed_v2', '1')
       setLabel('Notifications enabled')
       setVisible(false)
     } catch (e) {
