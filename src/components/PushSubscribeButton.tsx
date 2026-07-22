@@ -40,11 +40,19 @@ export default function PushSubscribeButton() {
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
       })
-      await fetch('/api/subscribe-push', {
+      const res = await fetch('/api/subscribe-push', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(sub.toJSON()),
       })
+      if (!res.ok) {
+        // fetch() only rejects on network failure, not on a non-2xx status
+        // (e.g. a 502 from a failed Supabase upsert) — without this check,
+        // a server-side failure gets silently treated as success.
+        setLabel('Enable Notifications')
+        setBusy(false)
+        return
+      }
       localStorage.setItem('content_push_subscribed', '1')
       setLabel('Notifications enabled')
       setVisible(false)
