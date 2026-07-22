@@ -1,0 +1,34 @@
+name: Posting Cadence Nudge
+
+on:
+  schedule:
+    # ~8pm Eastern (accounting for DST drift, same caveat as Row's workout-nudge.yml) = 12am UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  nudge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send posting cadence nudge
+        run: |
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            https://content-nine-chi.vercel.app/api/send-posting-cadence-nudge \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}")
+          code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+          echo "Response code: $code"
+          echo "Response body: $body"
+          if [ "$code" != "200" ]; then
+            echo "Error: unexpected response $code"
+            exit 1
+          fi
+          message=$(echo "$body" | jq -r '.message')
+          if [ "$message" = "Pushed" ]; then
+            sent=$(echo "$body" | jq -r '.sent')
+            total=$(echo "$body" | jq -r '.total')
+            if [ "$sent" != "$total" ]; then
+              echo "Error: only $sent/$total pushes actually succeeded"
+              exit 1
+            fi
+          fi
