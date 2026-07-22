@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import type { ReactNode } from 'react'
+import PushSubscribeButton from './PushSubscribeButton'
 
 const nav = [
   { to: '/dashboard', label: 'Dashboard' },
@@ -14,6 +15,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-surface flex">
       <aside className="w-48 bg-card border-r border-border flex flex-col p-4 gap-2 shrink-0">
         <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Content</p>
+        <PushSubscribeButton />
         {nav.map(n => (
           <NavLink
             key={n.to}
