@@ -1,11 +1,16 @@
 import type { Pillar, Platform, PipelineStatus } from '@/types/content'
+import trainingIcon from '@/assets/pillars/training.png'
+import dietIcon from '@/assets/pillars/diet.png'
+import mindsetIcon from '@/assets/pillars/mindset.png'
+import lifeIcon from '@/assets/pillars/life.png'
+import faithIcon from '@/assets/pillars/faith.png'
 
-export const PILLARS: { value: Pillar; label: string; color: string }[] = [
-  { value: 'training', label: 'Training', color: 'bg-red-900 text-red-200' },
-  { value: 'diet', label: 'Diet', color: 'bg-yellow-900 text-yellow-200' },
-  { value: 'mindset', label: 'Mindset', color: 'bg-purple-900 text-purple-200' },
-  { value: 'life', label: 'Life', color: 'bg-green-900 text-green-200' },
-  { value: 'faith', label: 'Faith', color: 'bg-blue-900 text-blue-200' },
+export const PILLARS: { value: Pillar; label: string; color: string; icon: string }[] = [
+  { value: 'training', label: 'Training', color: 'bg-red-900 text-red-200', icon: trainingIcon },
+  { value: 'diet', label: 'Diet', color: 'bg-yellow-900 text-yellow-200', icon: dietIcon },
+  { value: 'mindset', label: 'Mindset', color: 'bg-purple-900 text-purple-200', icon: mindsetIcon },
+  { value: 'life', label: 'Life', color: 'bg-green-900 text-green-200', icon: lifeIcon },
+  { value: 'faith', label: 'Faith', color: 'bg-blue-900 text-blue-200', icon: faithIcon },
 ]
 
 export const PIPELINE_STAGES: PipelineStatus[] = [
