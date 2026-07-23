@@ -13,6 +13,17 @@ export const PILLARS: { value: Pillar; label: string; color: string; icon: strin
   { value: 'faith', label: 'Faith', color: 'bg-blue-900 text-blue-200', icon: faithIcon },
 ]
 
+// Literal hex for pillar colors, matching PILLARS[].color's Tailwind bg-*-900
+// classes — needed anywhere a component sets a CSS color value directly
+// (e.g. BarRow's backgroundColor) rather than applying a Tailwind class.
+export const PILLAR_HEX: Record<Pillar, string> = {
+  training: '#7f1d1d',
+  diet: '#713f12',
+  mindset: '#581c87',
+  life: '#14532d',
+  faith: '#1e3a8a',
+}
+
 export const PIPELINE_STAGES: PipelineStatus[] = [
   'IDEA', 'DRAFT', 'READY', 'SCHEDULED', 'POSTED', 'TRACKED'
 ]
