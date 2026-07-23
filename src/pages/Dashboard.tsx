@@ -1,5 +1,7 @@
 import { useIdeas } from '@/hooks/useIdeas'
-import { PIPELINE_STAGES, PILLARS } from '@/lib/constants'
+import { PIPELINE_STAGES, PILLAR_HEX } from '@/lib/constants'
+import { countByPillar } from '@/lib/chartData'
+import BarRow from '@/components/BarRow'
 
 export default function Dashboard() {
   const { ideas, loading } = useIdeas()
@@ -53,19 +55,13 @@ export default function Dashboard() {
       <section>
         <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">By Pillar</p>
         <div className="flex flex-col gap-2">
-          {PILLARS.map(p => {
-            const count = ideas.filter(i => i.pillar === p.value).length
-            const pct = ideas.length ? Math.round((count / ideas.length) * 100) : 0
-            return (
-              <div key={p.value} className="flex items-center gap-3">
-                <span className={`text-xs px-2 py-0.5 rounded-full w-28 text-center ${p.color}`}>{p.label}</span>
-                <div className="flex-1 bg-border rounded-full h-1.5">
-                  <div className="bg-accent h-1.5 rounded-full" style={{ width: `${pct}%` }} />
-                </div>
-                <span className="text-xs text-gray-500 w-8 text-right">{count}</span>
-              </div>
-            )
-          })}
+          {ideas.length === 0 ? (
+            <p className="text-xs text-gray-600">No ideas yet.</p>
+          ) : (
+            countByPillar(ideas).map(p => (
+              <BarRow key={p.pillar} label={p.label} count={p.count} max={ideas.length} color={PILLAR_HEX[p.pillar]} />
+            ))
+          )}
         </div>
       </section>
     </div>
