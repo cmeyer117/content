@@ -120,4 +120,20 @@ describe('IdeaDetailModal', () => {
       execution_score: 1,
     }))
   })
+
+  it('renders a read-only predicted score block when predicted_score is set', () => {
+    const predicted: ContentIdea = {
+      ...idea,
+      predicted_score: 8,
+      predicted_reasoning: 'Matches Carl\'s own top-performing narrative hook pattern',
+    }
+    render(<IdeaDetailModal idea={predicted} onClose={() => {}} onSave={async () => {}} />)
+    expect(screen.getByText(/Predicted pattern-fit: 8\/10/)).toBeTruthy()
+    expect(screen.getByText(/Matches Carl's own top-performing narrative hook pattern/)).toBeTruthy()
+  })
+
+  it('renders no predicted score block when predicted_score is null', () => {
+    render(<IdeaDetailModal idea={idea} onClose={() => {}} onSave={async () => {}} />)
+    expect(screen.queryByText(/Predicted pattern-fit/)).toBeNull()
+  })
 })

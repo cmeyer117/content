@@ -68,4 +68,15 @@ describe('IdeaCard', () => {
     expect(screen.queryByText(/🎯/)).toBeNull()
     expect(screen.queryByText(/🎬/)).toBeNull()
   })
+
+  it('shows a predicted score badge when predicted_score is set', () => {
+    const predicted = { ...idea, predicted_score: 8 }
+    render(<IdeaCard idea={predicted} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} />)
+    expect(screen.getByText('🔮 8')).toBeTruthy()
+  })
+
+  it('shows no predicted score badge when predicted_score is null', () => {
+    render(<IdeaCard idea={idea} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} />)
+    expect(screen.queryByText(/🔮/)).toBeNull()
+  })
 })

@@ -41,6 +41,9 @@ export default function IdeaCard({ idea, onMove, onDelete, onOpen }: Props) {
         {idea.execution_score != null && (
           <span className="text-xs text-gray-400">🎬 {idea.execution_score}</span>
         )}
+        {idea.predicted_score != null && (
+          <span className="text-xs text-gray-400" title={idea.predicted_reasoning ?? undefined}>🔮 {idea.predicted_score}</span>
+        )}
       </div>
       {nextStage && (
         <button
