@@ -23,6 +23,10 @@ const idea: ContentIdea = {
   idea_score_notes: null,
   execution_score: null,
   execution_score_notes: null,
+  predicted_score: null,
+  predicted_reasoning: null,
+  predicted_at: null,
+  prediction_version: null,
   created_at: '2026-07-13T00:00:00.000Z',
 }
 

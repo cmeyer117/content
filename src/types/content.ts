@@ -22,6 +22,10 @@ export type ContentIdea = {
   idea_score_notes: string | null
   execution_score: number | null
   execution_score_notes: string | null
+  predicted_score: number | null
+  predicted_reasoning: string | null
+  predicted_at: string | null
+  prediction_version: string | null
   created_at: string
 }
 

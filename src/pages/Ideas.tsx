@@ -24,6 +24,10 @@ const empty: NewContentIdea = {
   idea_score_notes: null,
   execution_score: null,
   execution_score_notes: null,
+  predicted_score: null,
+  predicted_reasoning: null,
+  predicted_at: null,
+  prediction_version: null,
 }
 
 export default function Ideas() {
