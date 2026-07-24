@@ -1,8 +1,11 @@
-// Reusable, idempotent ingestion of Row Exercise Bible insights into the
-// content_ideas idea bank. Re-run safely after new manuals are added — only
-// titles not already present get inserted. Run with --dry-run to preview.
+// Reusable, idempotent ingestion of extracted vault insights into the
+// content_ideas idea bank. Re-run safely any time — only titles not already
+// present get inserted. Run with --dry-run to preview.
+// Data path is required (no default) — this replaced the Row-only version
+// (scripts/ingest-row-ideas.js), which defaulted to data/row-exercise-ideas.json.
+// That file still works as input, just pass its path explicitly.
 import { readFileSync } from 'node:fs'
-import { filterNewIdeas } from './ingest-row-ideas-logic.js'
+import { filterNewIdeas } from './ingest-content-ideas-logic.js'
 
 const SUPABASE_URL = 'https://vikpcejlyxieguorwysf.supabase.co'
 const SUPABASE_KEY = 'sb_publishable_EvWPtfW1FBW5Vf-H6w0yHw_PcXK4imv'
@@ -25,7 +28,13 @@ async function insertIdea(idea) {
       'Content-Type': 'application/json',
       Prefer: 'return=minimal',
     },
-    body: JSON.stringify({ title: idea.title, body: idea.body, pillar: idea.pillar, status: 'IDEA' }),
+    body: JSON.stringify({
+      title: idea.title,
+      body: idea.body,
+      pillar: idea.pillar,
+      notes: idea.notes ?? null,
+      status: 'IDEA',
+    }),
   })
   if (!r.ok) throw new Error(`Failed to insert "${idea.title}": ${r.status} ${await r.text()}`)
 }
@@ -33,9 +42,11 @@ async function insertIdea(idea) {
 async function main() {
   const dryRun = process.argv.includes('--dry-run')
   const dataPathArg = process.argv.find((a) => a.endsWith('.json'))
-  const dataPath = dataPathArg ?? new URL('./data/row-exercise-ideas.json', import.meta.url)
+  if (!dataPathArg) {
+    throw new Error('Usage: node ingest-content-ideas.js <path-to-ideas.json> [--dry-run]')
+  }
 
-  const ideas = JSON.parse(readFileSync(dataPath, 'utf-8'))
+  const ideas = JSON.parse(readFileSync(dataPathArg, 'utf-8'))
   const existingTitles = await fetchExistingTitles()
   const newIdeas = filterNewIdeas(ideas, existingTitles)
 

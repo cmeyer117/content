@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "ingest-row-ideas": "node scripts/ingest-row-ideas.js"
+    "ingest-content-ideas": "node scripts/ingest-content-ideas.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
