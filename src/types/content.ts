@@ -26,6 +26,10 @@ export type ContentIdea = {
   predicted_reasoning: string | null
   predicted_at: string | null
   prediction_version: string | null
+  metricool_reach: number | null
+  metricool_engagement_rate: number | null
+  metricool_comments: number | null
+  metricool_synced_at: string | null
   created_at: string
 }
 
