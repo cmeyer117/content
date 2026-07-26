@@ -1,5 +1,5 @@
 import { useIdeas } from '@/hooks/useIdeas'
-import { PIPELINE_STAGES, PILLAR_HEX } from '@/lib/constants'
+import { PIPELINE_STAGES, PILLAR_HEX, PIPELINE_STAGE_COLORS } from '@/lib/constants'
 import { countByPillar } from '@/lib/chartData'
 import BarRow from '@/components/BarRow'
 
@@ -25,9 +25,13 @@ export default function Dashboard() {
         <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Pipeline</p>
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
           {PIPELINE_STAGES.map(s => (
-            <div key={s} className="bg-card border border-border rounded-xl p-4 text-center">
-              <p className="text-2xl font-bold text-gray-900">{byStage[s] ?? 0}</p>
-              <p className="text-xs text-gray-500 mt-1">{s}</p>
+            <div
+              key={s}
+              className="bg-card border-2 rounded-xl p-4 text-center"
+              style={{ borderColor: PIPELINE_STAGE_COLORS[s] }}
+            >
+              <p className="text-3xl font-bold" style={{ color: PIPELINE_STAGE_COLORS[s] }}>{byStage[s] ?? 0}</p>
+              <p className="text-xs text-gray-500 mt-1 font-semibold uppercase tracking-wide">{s}</p>
             </div>
           ))}
         </div>
