@@ -1,5 +1,5 @@
 import { useIdeas } from '@/hooks/useIdeas'
-import { PIPELINE_STAGES, PILLAR_HEX, PIPELINE_STAGE_COLORS } from '@/lib/constants'
+import { PIPELINE_STAGES, PILLAR_HEX, PIPELINE_STAGE_COLORS, PILLARS } from '@/lib/constants'
 import { countByPillar } from '@/lib/chartData'
 import BarRow from '@/components/BarRow'
 
@@ -63,7 +63,14 @@ export default function Dashboard() {
             <p className="text-xs text-gray-600">No ideas yet.</p>
           ) : (
             countByPillar(ideas).map(p => (
-              <BarRow key={p.pillar} label={p.label} count={p.count} max={ideas.length} color={PILLAR_HEX[p.pillar]} />
+              <BarRow
+                key={p.pillar}
+                label={p.label}
+                count={p.count}
+                max={ideas.length}
+                color={PILLAR_HEX[p.pillar]}
+                icon={PILLARS.find(pl => pl.value === p.pillar)?.icon}
+              />
             ))
           )}
         </div>

@@ -16,4 +16,16 @@ describe('BarRow', () => {
     const bar = container.querySelector('[style*="width"]')
     expect(bar?.getAttribute('style')).toContain('0%')
   })
+
+  it('renders an icon when one is provided', () => {
+    render(<BarRow label="Training" count={3} max={10} color="#7f1d1d" icon="/training.png" />)
+    const img = screen.getByRole('img', { name: 'Training' })
+    expect(img).toBeTruthy()
+    expect(img.getAttribute('src')).toBe('/training.png')
+  })
+
+  it('renders no img element when icon is omitted', () => {
+    const { container } = render(<BarRow label="Training" count={3} max={10} color="#7f1d1d" />)
+    expect(container.querySelector('img')).toBeNull()
+  })
 })
