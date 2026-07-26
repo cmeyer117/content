@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { countByPillar, countByStage, countByWeek, countByPillarAndStage } from '@/lib/chartData'
+import { countByPillar, countByStage, countByWeek, countByPillarAndStage, getTopPerformer, getTopNByViews } from '@/lib/chartData'
 import type { ContentIdea } from '@/types/content'
 
 function makeIdea(overrides: Partial<ContentIdea>): ContentIdea {
@@ -81,5 +81,67 @@ describe('countByPillarAndStage', () => {
     expect(training.TRACKED).toBe(0)
     const diet = result.find(r => r.pillar === 'diet')!
     expect(diet.IDEA).toBe(0)
+  })
+})
+
+describe('getTopPerformer', () => {
+  it('returns the tracked idea with the highest views', () => {
+    const ideas = [
+      makeIdea({ id: 'a', status: 'TRACKED', views: 100 }),
+      makeIdea({ id: 'b', status: 'TRACKED', views: 500 }),
+      makeIdea({ id: 'c', status: 'TRACKED', views: 200 }),
+    ]
+    expect(getTopPerformer(ideas)?.id).toBe('b')
+  })
+
+  it('ignores non-tracked ideas even if their views field is set', () => {
+    const ideas = [
+      makeIdea({ id: 'a', status: 'DRAFT', views: 9000 }),
+      makeIdea({ id: 'b', status: 'TRACKED', views: 50 }),
+    ]
+    expect(getTopPerformer(ideas)?.id).toBe('b')
+  })
+
+  it('treats null views as 0', () => {
+    const ideas = [
+      makeIdea({ id: 'a', status: 'TRACKED', views: null }),
+      makeIdea({ id: 'b', status: 'TRACKED', views: 10 }),
+    ]
+    expect(getTopPerformer(ideas)?.id).toBe('b')
+  })
+
+  it('breaks a views tie by most-recently-created', () => {
+    const ideas = [
+      makeIdea({ id: 'a', status: 'TRACKED', views: 100, created_at: '2026-01-01T00:00:00Z' }),
+      makeIdea({ id: 'b', status: 'TRACKED', views: 100, created_at: '2026-02-01T00:00:00Z' }),
+    ]
+    expect(getTopPerformer(ideas)?.id).toBe('b')
+  })
+
+  it('returns null when there are no tracked ideas', () => {
+    const ideas = [makeIdea({ status: 'DRAFT' })]
+    expect(getTopPerformer(ideas)).toBeNull()
+  })
+})
+
+describe('getTopNByViews', () => {
+  it('returns tracked ideas sorted by views descending, capped at n', () => {
+    const ideas = [
+      makeIdea({ id: 'a', status: 'TRACKED', views: 100 }),
+      makeIdea({ id: 'b', status: 'TRACKED', views: 500 }),
+      makeIdea({ id: 'c', status: 'TRACKED', views: 200 }),
+      makeIdea({ id: 'd', status: 'TRACKED', views: 50 }),
+    ]
+    const result = getTopNByViews(ideas, 2)
+    expect(result.map(i => i.id)).toEqual(['b', 'c'])
+  })
+
+  it('returns fewer than n items when fewer tracked ideas exist', () => {
+    const ideas = [makeIdea({ id: 'a', status: 'TRACKED', views: 10 })]
+    expect(getTopNByViews(ideas, 5)).toHaveLength(1)
+  })
+
+  it('returns an empty array when there are no tracked ideas', () => {
+    expect(getTopNByViews([makeIdea({ status: 'IDEA' })], 5)).toEqual([])
   })
 })

@@ -61,6 +61,25 @@ export function countByWeek(ideas: ContentIdea[]): { weekStart: string; count: n
   return result
 }
 
+export function getTopPerformer(ideas: ContentIdea[]): ContentIdea | null {
+  const tracked = ideas.filter(i => i.status === 'TRACKED')
+  if (tracked.length === 0) return null
+  return tracked.reduce((best, current) => {
+    const bestViews = best.views ?? 0
+    const currentViews = current.views ?? 0
+    if (currentViews > bestViews) return current
+    if (currentViews === bestViews && current.created_at > best.created_at) return current
+    return best
+  })
+}
+
+export function getTopNByViews(ideas: ContentIdea[], n: number): ContentIdea[] {
+  return ideas
+    .filter(i => i.status === 'TRACKED')
+    .sort((a, b) => (b.views ?? 0) - (a.views ?? 0))
+    .slice(0, n)
+}
+
 export type PillarStageBreakdown = { pillar: Pillar; label: string } & Record<PipelineStatus, number>
 
 export function countByPillarAndStage(ideas: ContentIdea[]): PillarStageBreakdown[] {
