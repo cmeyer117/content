@@ -4,7 +4,7 @@ export default function BarRow({ label, count, max, color, icon }: Props) {
   const pct = max > 0 ? Math.round((count / max) * 100) : 0
   return (
     <div className="flex items-center gap-3">
-      {icon && <img src={icon} alt={label} className="w-5 h-5 shrink-0" />}
+      {icon && <img src={icon} alt="" aria-hidden="true" className="w-5 h-5 shrink-0" />}
       <span className="text-xs w-28 shrink-0 text-gray-500 truncate">{label}</span>
       <div className="flex-1 bg-border rounded-full h-1.5">
         <div className="h-1.5 rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />

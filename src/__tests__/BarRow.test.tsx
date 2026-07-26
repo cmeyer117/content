@@ -17,11 +17,13 @@ describe('BarRow', () => {
     expect(bar?.getAttribute('style')).toContain('0%')
   })
 
-  it('renders an icon when one is provided', () => {
-    render(<BarRow label="Training" count={3} max={10} color="#7f1d1d" icon="/training.png" />)
-    const img = screen.getByRole('img', { name: 'Training' })
+  it('renders a decorative icon (empty alt, aria-hidden) when one is provided', () => {
+    const { container } = render(<BarRow label="Training" count={3} max={10} color="#7f1d1d" icon="/training.png" />)
+    const img = container.querySelector('img')
     expect(img).toBeTruthy()
-    expect(img.getAttribute('src')).toBe('/training.png')
+    expect(img?.getAttribute('src')).toBe('/training.png')
+    expect(img?.getAttribute('alt')).toBe('')
+    expect(img?.getAttribute('aria-hidden')).toBe('true')
   })
 
   it('renders no img element when icon is omitted', () => {

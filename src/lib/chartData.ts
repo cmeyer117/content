@@ -74,6 +74,7 @@ export function getTopPerformer(ideas: ContentIdea[]): ContentIdea | null {
 }
 
 export function getTopNByViews(ideas: ContentIdea[], n: number): ContentIdea[] {
+  if (n <= 0) return []
   return ideas
     .filter(i => i.status === 'TRACKED')
     .sort((a, b) => (b.views ?? 0) - (a.views ?? 0))

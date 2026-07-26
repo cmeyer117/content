@@ -31,7 +31,7 @@ export const PIPELINE_STAGES: PipelineStatus[] = [
 // Distinct color per pipeline stage, gray→blue→green progression matching
 // the account's actual maturity through the pipeline (idea → tracked/done).
 export const PIPELINE_STAGE_COLORS: Record<PipelineStatus, string> = {
-  IDEA: '#94a3b8',
+  IDEA: '#475569',
   DRAFT: '#64748b',
   READY: '#3b82f6',
   SCHEDULED: '#2563eb',

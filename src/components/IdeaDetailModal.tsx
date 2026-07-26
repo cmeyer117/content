@@ -154,7 +154,7 @@ export default function IdeaDetailModal({ idea, onClose, onSave }: Props) {
 
         {idea.predicted_score != null && (
           <div className="bg-surface border border-border rounded-lg px-4 py-2 text-sm text-gray-500">
-            <p className="font-medium text-gray-300">🔮 Predicted pattern-fit: {idea.predicted_score}/10</p>
+            <p className="font-medium text-gray-700">🔮 Predicted pattern-fit: {idea.predicted_score}/10</p>
             {idea.predicted_reasoning && <p className="text-xs mt-1">{idea.predicted_reasoning}</p>}
           </div>
         )}

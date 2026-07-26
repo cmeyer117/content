@@ -36,13 +36,13 @@ export default function IdeaCard({ idea, onMove, onDelete, onOpen }: Props) {
         <StatusBadge status={idea.status} />
         <span className="text-xs text-gray-600">{idea.platform}</span>
         {idea.idea_score != null && (
-          <span className="text-xs text-gray-400">🎯 {idea.idea_score}</span>
+          <span className="text-xs text-gray-600">🎯 {idea.idea_score}</span>
         )}
         {idea.execution_score != null && (
-          <span className="text-xs text-gray-400">🎬 {idea.execution_score}</span>
+          <span className="text-xs text-gray-600">🎬 {idea.execution_score}</span>
         )}
         {idea.predicted_score != null && (
-          <span className="text-xs text-gray-400" title={idea.predicted_reasoning ?? undefined}>🔮 {idea.predicted_score}</span>
+          <span className="text-xs text-gray-600" title={idea.predicted_reasoning ?? undefined}>🔮 {idea.predicted_score}</span>
         )}
       </div>
       {nextStage && (

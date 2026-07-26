@@ -14,10 +14,10 @@ function BriefBody({ text }: { text: string }) {
           return <p key={i} className="text-sm font-bold text-gray-900 mt-3">{line.replace(/^#+\s*/, '')}</p>
         }
         if (/^[-•*]\s/.test(line)) {
-          return <p key={i} className="text-sm text-gray-400 pl-3">• {line.replace(/^[-•*]\s*/, '')}</p>
+          return <p key={i} className="text-sm text-gray-600 pl-3">• {line.replace(/^[-•*]\s*/, '')}</p>
         }
         if (!line.trim()) return null
-        return <p key={i} className="text-sm text-gray-400 whitespace-pre-wrap">{line}</p>
+        return <p key={i} className="text-sm text-gray-600 whitespace-pre-wrap">{line}</p>
       })}
     </div>
   )
@@ -101,7 +101,7 @@ export default function Intel() {
             {takeaway && (
               <div className="bg-surface border border-border rounded-lg p-3 flex flex-col gap-2">
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">This week's play</p>
-                <p className="text-sm text-gray-300 whitespace-pre-wrap">{takeaway}</p>
+                <p className="text-sm text-gray-700 whitespace-pre-wrap">{takeaway}</p>
                 <div className="flex items-center gap-2 mt-1">
                   <select
                     value={pillarChoice[insight.id] ?? 'mindset'}

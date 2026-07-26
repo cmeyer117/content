@@ -142,6 +142,16 @@ describe('getTopNByViews', () => {
     expect(getTopNByViews(ideas, 5)).toHaveLength(1)
   })
 
+  it('returns an empty array for n = 0', () => {
+    const ideas = [makeIdea({ status: 'TRACKED', views: 10 })]
+    expect(getTopNByViews(ideas, 0)).toEqual([])
+  })
+
+  it('returns an empty array for negative n', () => {
+    const ideas = [makeIdea({ status: 'TRACKED', views: 10 })]
+    expect(getTopNByViews(ideas, -3)).toEqual([])
+  })
+
   it('returns an empty array when there are no tracked ideas', () => {
     expect(getTopNByViews([makeIdea({ status: 'IDEA' })], 5)).toEqual([])
   })
