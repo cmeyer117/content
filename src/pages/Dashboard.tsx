@@ -92,7 +92,7 @@ export default function Dashboard() {
         <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">By Pillar</p>
         <div className="flex flex-col gap-2">
           {ideas.length === 0 ? (
-            <p className="text-xs text-gray-600">No ideas yet.</p>
+            <EmptyState message="No ideas yet — add your first one on the Ideas page." icon="💡" />
           ) : (
             countByPillar(ideas).map(p => (
               <BarRow
