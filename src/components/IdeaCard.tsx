@@ -20,7 +20,7 @@ export default function IdeaCard({ idea, onMove, onDelete, onOpen }: Props) {
         className="flex items-start justify-between gap-2 cursor-pointer"
         onClick={() => onOpen(idea)}
       >
-        <p className="text-sm font-medium text-white leading-snug">{idea.title}</p>
+        <p className="text-sm font-medium text-gray-900 leading-snug">{idea.title}</p>
         <button
           onClick={e => { e.stopPropagation(); onDelete(idea.id) }}
           className="text-gray-600 hover:text-red-400 text-xs shrink-0"

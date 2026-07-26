@@ -22,7 +22,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             to={n.to}
             className={({ isActive }) =>
               `px-3 py-2 rounded text-sm transition-colors ${
-                isActive ? 'bg-accent text-white' : 'text-gray-400 hover:text-white hover:bg-border'
+                isActive ? 'bg-accent text-white' : 'text-gray-500 hover:text-gray-900 hover:bg-border'
               }`
             }
           >
