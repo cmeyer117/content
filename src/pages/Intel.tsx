@@ -58,6 +58,10 @@ export default function Intel() {
       predicted_reasoning: null,
       predicted_at: null,
       prediction_version: null,
+      metricool_reach: null,
+      metricool_engagement_rate: null,
+      metricool_comments: null,
+      metricool_synced_at: null,
     })
     setAdded(prev => ({ ...prev, [insightId]: true }))
   }

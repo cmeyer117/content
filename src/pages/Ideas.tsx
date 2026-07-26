@@ -29,6 +29,10 @@ const empty: NewContentIdea = {
   predicted_reasoning: null,
   predicted_at: null,
   prediction_version: null,
+  metricool_reach: null,
+  metricool_engagement_rate: null,
+  metricool_comments: null,
+  metricool_synced_at: null,
 }
 
 export default function Ideas() {
