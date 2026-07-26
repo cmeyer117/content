@@ -54,32 +54,32 @@ export default function Ideas() {
 
   return (
     <div className="max-w-3xl mx-auto flex flex-col gap-8">
-      <h1 className="text-2xl font-bold text-white">Ideas</h1>
+      <h1 className="text-2xl font-bold text-gray-900">Ideas</h1>
 
       {/* Capture form */}
       <form onSubmit={handleSubmit} className="bg-card border border-border rounded-xl p-5 flex flex-col gap-4">
         <input
-          className="bg-surface border border-border rounded-lg px-4 py-2 text-white placeholder-gray-600 text-sm w-full"
+          className="bg-surface border border-border rounded-lg px-4 py-2 text-gray-900 placeholder-gray-400 text-sm w-full"
           placeholder="What's the idea?"
           value={form.title}
           onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
         />
         <input
-          className="bg-surface border border-border rounded-lg px-4 py-2 text-white placeholder-gray-600 text-sm w-full"
+          className="bg-surface border border-border rounded-lg px-4 py-2 text-gray-900 placeholder-gray-400 text-sm w-full"
           placeholder="Hook (optional)"
           value={form.hook ?? ''}
           onChange={e => setForm(f => ({ ...f, hook: e.target.value || null }))}
         />
         <div className="flex gap-3">
           <select
-            className="bg-surface border border-border rounded-lg px-3 py-2 text-sm text-white flex-1"
+            className="bg-surface border border-border rounded-lg px-3 py-2 text-sm text-gray-900 flex-1"
             value={form.pillar}
             onChange={e => setForm(f => ({ ...f, pillar: e.target.value as Pillar }))}
           >
             {PILLARS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
           </select>
           <select
-            className="bg-surface border border-border rounded-lg px-3 py-2 text-sm text-white flex-1"
+            className="bg-surface border border-border rounded-lg px-3 py-2 text-sm text-gray-900 flex-1"
             value={form.platform}
             onChange={e => setForm(f => ({ ...f, platform: e.target.value as Platform }))}
           >
@@ -99,7 +99,7 @@ export default function Ideas() {
       <div className="flex gap-2 flex-wrap">
         <button
           onClick={() => setFilterPillar('all')}
-          className={`px-3 py-1 rounded-full text-xs ${filterPillar === 'all' ? 'bg-accent text-white' : 'bg-card border border-border text-gray-400'}`}
+          className={`px-3 py-1 rounded-full text-xs ${filterPillar === 'all' ? 'bg-accent text-white' : 'bg-card border border-border text-gray-500'}`}
         >
           All
         </button>
@@ -107,7 +107,7 @@ export default function Ideas() {
           <button
             key={p.value}
             onClick={() => setFilterPillar(p.value)}
-            className={`px-3 py-1 rounded-full text-xs ${filterPillar === p.value ? 'bg-accent text-white' : 'bg-card border border-border text-gray-400'}`}
+            className={`px-3 py-1 rounded-full text-xs ${filterPillar === p.value ? 'bg-accent text-white' : 'bg-card border border-border text-gray-500'}`}
           >
             {p.label}
           </button>

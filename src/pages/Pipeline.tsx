@@ -15,7 +15,7 @@ export default function Pipeline() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold text-white">Pipeline</h1>
+      <h1 className="text-2xl font-bold text-gray-900">Pipeline</h1>
       <div className="flex gap-4 overflow-x-auto pb-4">
         {PIPELINE_STAGES.map(stage => {
           const cards = grouped.get(stage) ?? []

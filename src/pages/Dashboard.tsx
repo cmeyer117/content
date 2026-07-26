@@ -18,7 +18,7 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+      <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
 
       {/* Pipeline summary */}
       <section>
@@ -26,7 +26,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
           {PIPELINE_STAGES.map(s => (
             <div key={s} className="bg-card border border-border rounded-xl p-4 text-center">
-              <p className="text-2xl font-bold text-white">{byStage[s] ?? 0}</p>
+              <p className="text-2xl font-bold text-gray-900">{byStage[s] ?? 0}</p>
               <p className="text-xs text-gray-500 mt-1">{s}</p>
             </div>
           ))}
@@ -44,7 +44,7 @@ export default function Dashboard() {
             { label: 'Ideas in Bank', value: ideas.length },
           ].map(s => (
             <div key={s.label} className="bg-card border border-border rounded-xl p-4">
-              <p className="text-2xl font-bold text-white">{s.value}</p>
+              <p className="text-2xl font-bold text-gray-900">{s.value}</p>
               <p className="text-xs text-gray-500 mt-1">{s.label}</p>
             </div>
           ))}

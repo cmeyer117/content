@@ -11,7 +11,7 @@ function BriefBody({ text }: { text: string }) {
     <div className="flex flex-col gap-1">
       {text.split('\n').map((line, i) => {
         if (/^#{1,4}\s/.test(line)) {
-          return <p key={i} className="text-sm font-bold text-white mt-3">{line.replace(/^#+\s*/, '')}</p>
+          return <p key={i} className="text-sm font-bold text-gray-900 mt-3">{line.replace(/^#+\s*/, '')}</p>
         }
         if (/^[-•*]\s/.test(line)) {
           return <p key={i} className="text-sm text-gray-400 pl-3">• {line.replace(/^[-•*]\s*/, '')}</p>
@@ -67,7 +67,7 @@ export default function Intel() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold text-white">Creator Intel</h1>
+      <h1 className="text-2xl font-bold text-gray-900">Creator Intel</h1>
       {insights.length === 0 && (
         <p className="text-gray-600 text-sm">
           No briefs yet. The pipeline runs every Monday 6am — briefs land here automatically.
@@ -80,7 +80,7 @@ export default function Intel() {
           <div key={insight.id} className="bg-card border border-border rounded-xl p-5 flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-bold text-white">{creatorName(insight.creator_id)}</p>
+                <p className="text-sm font-bold text-gray-900">{creatorName(insight.creator_id)}</p>
                 <p className="text-xs text-gray-500">
                   Week of {insight.week_of}
                   {insight.avg_views ? ` · avg ${Math.round(insight.avg_views).toLocaleString()} views` : ''}
@@ -88,7 +88,7 @@ export default function Intel() {
               </div>
               <button
                 onClick={() => setExpanded(prev => ({ ...prev, [insight.id]: !isOpen }))}
-                className="text-xs text-gray-400 hover:text-white"
+                className="text-xs text-gray-500 hover:text-gray-900"
               >
                 {isOpen ? 'Collapse' : 'Full brief'}
               </button>
@@ -102,7 +102,7 @@ export default function Intel() {
                   <select
                     value={pillarChoice[insight.id] ?? 'mindset'}
                     onChange={e => setPillarChoice(prev => ({ ...prev, [insight.id]: e.target.value as Pillar }))}
-                    className="bg-card border border-border rounded px-2 py-1 text-xs text-white"
+                    className="bg-card border border-border rounded px-2 py-1 text-xs text-gray-900"
                   >
                     {PILLARS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
                   </select>

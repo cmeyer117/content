@@ -50,7 +50,7 @@ export default function Analytics() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold text-white">Analytics</h1>
+      <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
 
       {/* Pipeline Overview */}
       <section className="flex flex-col gap-6">
@@ -103,7 +103,7 @@ export default function Analytics() {
           <div key={idea.id} className="bg-card border border-border rounded-xl p-5 flex flex-col gap-3">
             <div className="flex items-start gap-3">
               <PillarBadge pillar={idea.pillar} />
-              <p className="text-sm font-medium text-white">{idea.title}</p>
+              <p className="text-sm font-medium text-gray-900">{idea.title}</p>
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs text-gray-500 uppercase tracking-wide">
@@ -112,7 +112,7 @@ export default function Analytics() {
               <input
                 type="url"
                 placeholder="https://www.tiktok.com/@you/video/..."
-                className="bg-surface border border-border rounded px-2 py-1 text-sm text-white w-full"
+                className="bg-surface border border-border rounded px-2 py-1 text-sm text-gray-900 w-full"
                 value={draft.post_url ?? idea.post_url ?? ''}
                 onChange={e => setEditing(prev => ({
                   ...prev,
@@ -126,7 +126,7 @@ export default function Analytics() {
                 <input
                   type="url"
                   placeholder="https://www.instagram.com/reel/..."
-                  className="bg-surface border border-border rounded px-2 py-1 text-sm text-white w-full"
+                  className="bg-surface border border-border rounded px-2 py-1 text-sm text-gray-900 w-full"
                   value={draft.post_url_instagram ?? idea.post_url_instagram ?? ''}
                   onChange={e => setEditing(prev => ({
                     ...prev,
@@ -142,7 +142,7 @@ export default function Analytics() {
                   <input
                     type="number"
                     min={0}
-                    className="bg-surface border border-border rounded px-2 py-1 text-sm text-white w-full"
+                    className="bg-surface border border-border rounded px-2 py-1 text-sm text-gray-900 w-full"
                     value={(draft as Record<string, number | null | undefined>)[m] ?? idea[m as keyof ContentIdea] ?? ''}
                     onChange={e => setEditing(prev => ({
                       ...prev,
@@ -162,7 +162,7 @@ export default function Analytics() {
                 </button>
                 <button
                   onClick={() => handleCancel(idea.id)}
-                  className="bg-surface border border-border text-gray-400 text-xs rounded px-3 py-1"
+                  className="bg-surface border border-border text-gray-500 text-xs rounded px-3 py-1"
                 >
                   Cancel
                 </button>
