@@ -32,6 +32,16 @@ export function IdeasProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => { void load() }, [load])
 
+  useEffect(() => {
+    const channel = supabase
+      .channel('content_ideas-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'content_ideas' }, () => {
+        void load()
+      })
+      .subscribe()
+    return () => { void supabase.removeChannel(channel) }
+  }, [load])
+
   const add = async (idea: NewContentIdea) => {
     const { data, error } = await supabase
       .from('content_ideas')

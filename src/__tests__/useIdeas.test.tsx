@@ -20,6 +20,11 @@ vi.mock('@/lib/supabase', () => ({
         eq: vi.fn(() => Promise.resolve({ error: null })),
       })),
     })),
+    channel: vi.fn(() => ({
+      on: vi.fn(function (this: unknown) { return this }),
+      subscribe: vi.fn(function (this: unknown) { return this }),
+    })),
+    removeChannel: vi.fn(),
   },
 }))
 
