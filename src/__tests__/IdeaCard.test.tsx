@@ -19,6 +19,7 @@ const idea: ContentIdea = {
   shares: null,
   saves: null,
   post_url: null,
+  post_url_instagram: null,
   idea_score: null,
   idea_score_notes: null,
   execution_score: null,

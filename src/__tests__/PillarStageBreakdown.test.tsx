@@ -8,7 +8,7 @@ function makeIdea(overrides: Partial<ContentIdea>): ContentIdea {
   return {
     id: 'x', title: 't', body: null, pillar: 'training', platform: 'tiktok', status: 'IDEA',
     hook: null, notes: null, scheduled_at: null, posted_at: null, views: null, likes: null,
-    shares: null, saves: null, post_url: null, idea_score: null, idea_score_notes: null,
+    shares: null, saves: null, post_url: null, post_url_instagram: null, idea_score: null, idea_score_notes: null,
     execution_score: null, execution_score_notes: null, predicted_score: null,
     predicted_reasoning: null, predicted_at: null, prediction_version: null,
     created_at: '2026-01-01T12:00:00Z',

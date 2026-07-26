@@ -106,7 +106,9 @@ export default function Analytics() {
               <p className="text-sm font-medium text-white">{idea.title}</p>
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500 uppercase tracking-wide">Post URL (auto-syncs TikTok stats nightly)</label>
+              <label className="text-xs text-gray-500 uppercase tracking-wide">
+                {idea.platform === 'instagram' ? 'Post URL' : 'TikTok Post URL'} (auto-syncs stats weekly)
+              </label>
               <input
                 type="url"
                 placeholder="https://www.tiktok.com/@you/video/..."
@@ -118,6 +120,21 @@ export default function Analytics() {
                 }))}
               />
             </div>
+            {idea.platform === 'both' && (
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-gray-500 uppercase tracking-wide">Instagram Post URL (auto-syncs stats weekly)</label>
+                <input
+                  type="url"
+                  placeholder="https://www.instagram.com/reel/..."
+                  className="bg-surface border border-border rounded px-2 py-1 text-sm text-white w-full"
+                  value={draft.post_url_instagram ?? idea.post_url_instagram ?? ''}
+                  onChange={e => setEditing(prev => ({
+                    ...prev,
+                    [idea.id]: { ...(prev[idea.id] ?? {}), post_url_instagram: e.target.value || null },
+                  }))}
+                />
+              </div>
+            )}
             <div className="grid grid-cols-4 gap-3">
               {METRICS.map(m => (
                 <div key={m} className="flex flex-col gap-1">
