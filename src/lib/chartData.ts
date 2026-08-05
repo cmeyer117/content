@@ -9,6 +9,15 @@ export function countByPillar(ideas: ContentIdea[]): { pillar: Pillar; label: st
   }))
 }
 
+export function sumViewsByPillar(ideas: ContentIdea[]): { pillar: Pillar; label: string; views: number }[] {
+  const tracked = ideas.filter(i => i.status === 'TRACKED')
+  return PILLARS.map(p => ({
+    pillar: p.value,
+    label: p.label,
+    views: tracked.filter(i => i.pillar === p.value).reduce((sum, i) => sum + (i.views ?? 0), 0),
+  }))
+}
+
 export function countByStage(ideas: ContentIdea[]): { stage: PipelineStatus; count: number }[] {
   return PIPELINE_STAGES.map(s => ({
     stage: s,

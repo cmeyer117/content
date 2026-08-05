@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { countByPillar, countByStage, countByWeek, countByPillarAndStage, getTopPerformer, getTopNByViews } from '@/lib/chartData'
+import { countByPillar, countByStage, countByWeek, countByPillarAndStage, getTopPerformer, getTopNByViews, sumViewsByPillar, sumViewsByWeek, postedDaysSet, metricoolTotals } from '@/lib/chartData'
 import type { ContentIdea } from '@/types/content'
 
 function makeIdea(overrides: Partial<ContentIdea>): ContentIdea {
@@ -29,6 +29,34 @@ describe('countByPillar', () => {
     const result = countByPillar([])
     expect(result).toHaveLength(5)
     expect(result.every(r => r.count === 0)).toBe(true)
+  })
+})
+
+describe('sumViewsByPillar', () => {
+  it('sums views per pillar for TRACKED ideas only', () => {
+    const ideas = [
+      makeIdea({ pillar: 'training', status: 'TRACKED', views: 100 }),
+      makeIdea({ pillar: 'training', status: 'TRACKED', views: 50 }),
+      makeIdea({ pillar: 'faith', status: 'TRACKED', views: 30 }),
+      makeIdea({ pillar: 'training', status: 'IDEA', views: 9000 }), // not TRACKED, ignored
+    ]
+    const result = sumViewsByPillar(ideas)
+    expect(result).toHaveLength(5)
+    expect(result.find(r => r.pillar === 'training')?.views).toBe(150)
+    expect(result.find(r => r.pillar === 'faith')?.views).toBe(30)
+    expect(result.find(r => r.pillar === 'diet')?.views).toBe(0)
+  })
+
+  it('treats null views as 0', () => {
+    const ideas = [makeIdea({ pillar: 'life', status: 'TRACKED', views: null })]
+    const result = sumViewsByPillar(ideas)
+    expect(result.find(r => r.pillar === 'life')?.views).toBe(0)
+  })
+
+  it('returns all-zero views for an empty array', () => {
+    const result = sumViewsByPillar([])
+    expect(result).toHaveLength(5)
+    expect(result.every(r => r.views === 0)).toBe(true)
   })
 })
 
