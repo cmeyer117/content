@@ -148,6 +148,40 @@ describe('postedDaysSet', () => {
   })
 })
 
+describe('metricoolTotals', () => {
+  it('sums metricool_reach and averages metricool_engagement_rate across TRACKED ideas', () => {
+    const ideas = [
+      makeIdea({ status: 'TRACKED', metricool_reach: 100, metricool_engagement_rate: 2.5 }),
+      makeIdea({ status: 'TRACKED', metricool_reach: 200, metricool_engagement_rate: 7.5 }),
+      makeIdea({ status: 'IDEA', metricool_reach: 9000, metricool_engagement_rate: 99 }), // not TRACKED, ignored
+    ]
+    const result = metricoolTotals(ideas)
+    expect(result.totalReach).toBe(300)
+    expect(result.avgEngagementRate).toBe(5)
+  })
+
+  it('treats null metricool_reach as 0 but excludes null metricool_engagement_rate from the average', () => {
+    const ideas = [
+      makeIdea({ status: 'TRACKED', metricool_reach: null, metricool_engagement_rate: null }),
+      makeIdea({ status: 'TRACKED', metricool_reach: 100, metricool_engagement_rate: 4 }),
+    ]
+    const result = metricoolTotals(ideas)
+    expect(result.totalReach).toBe(100)
+    expect(result.avgEngagementRate).toBe(4)
+  })
+
+  it('returns avgEngagementRate: null when no TRACKED idea has synced data yet', () => {
+    const result = metricoolTotals([makeIdea({ status: 'TRACKED', metricool_engagement_rate: null })])
+    expect(result.avgEngagementRate).toBeNull()
+  })
+
+  it('returns totalReach: 0 and avgEngagementRate: null for an empty array', () => {
+    const result = metricoolTotals([])
+    expect(result.totalReach).toBe(0)
+    expect(result.avgEngagementRate).toBeNull()
+  })
+})
+
 describe('countByPillarAndStage', () => {
   it('returns all 5 pillars each with all 6 stage keys, zero-filled where absent', () => {
     const ideas = [makeIdea({ pillar: 'training', status: 'IDEA' }), makeIdea({ pillar: 'training', status: 'DRAFT' })]

@@ -103,6 +103,17 @@ export function postedDaysSet(ideas: ContentIdea[]): Set<string> {
   return days
 }
 
+// metricool_engagement_rate is stored in Supabase as a plain percentage
+// (e.g. 3.52 means 3.52%, confirmed via direct query 2026-08-05) — do not
+// multiply by 100.
+export function metricoolTotals(ideas: ContentIdea[]): { totalReach: number; avgEngagementRate: number | null } {
+  const tracked = ideas.filter(i => i.status === 'TRACKED')
+  const totalReach = tracked.reduce((sum, i) => sum + (i.metricool_reach ?? 0), 0)
+  const rates = tracked.map(i => i.metricool_engagement_rate).filter((r): r is number => r !== null)
+  const avgEngagementRate = rates.length > 0 ? rates.reduce((sum, r) => sum + r, 0) / rates.length : null
+  return { totalReach, avgEngagementRate }
+}
+
 export function getTopPerformer(ideas: ContentIdea[]): ContentIdea | null {
   const tracked = ideas.filter(i => i.status === 'TRACKED')
   if (tracked.length === 0) return null
