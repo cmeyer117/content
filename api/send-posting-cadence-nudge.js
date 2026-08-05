@@ -4,7 +4,7 @@
 // had to retrofit this same night after discovering the GH Actions
 // workflow only checked outer HTTP status, never sent/total).
 import webpush from 'web-push';
-import { hasPostedToday } from './posting-cadence-logic.js';
+import { hasPostedToday, BEST_WINDOW_ET } from './posting-cadence-logic.js';
 
 const SUPABASE_URL = 'https://vikpcejlyxieguorwysf.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_EvWPtfW1FBW5Vf-H6w0yHw_PcXK4imv';
@@ -63,7 +63,7 @@ export async function handleSendPostingCadenceNudgeRequest() {
   const banked = await fetchBankedIdeaCount();
   const payload = JSON.stringify({
     title: 'Content Manager',
-    body: `No content posted today — ${banked} ideas banked, ship one.`,
+    body: `No content posted today — post now to catch ${BEST_WINDOW_ET}. ${banked} ideas banked, ship one.`,
   });
 
   let sent = 0;

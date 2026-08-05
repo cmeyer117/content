@@ -2,8 +2,9 @@ name: Posting Cadence Nudge
 
 on:
   schedule:
-    # ~8pm Eastern (accounting for DST drift, same caveat as Row's workout-nudge.yml) = 12am UTC
-    - cron: '0 0 * * *'
+    # ~5:30pm Eastern (accounting for DST drift, same caveat as Row's workout-nudge.yml) = 21:30 UTC EDT
+    # Timed to land before the 6pm ET posting peak (Metricool data, 2026-08-05), not after it like the old 8pm slot.
+    - cron: '30 21 * * *'
   workflow_dispatch:
 
 jobs:
