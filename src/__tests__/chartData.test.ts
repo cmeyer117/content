@@ -124,6 +124,15 @@ describe('sumViewsByWeek', () => {
     ]
     expect(sumViewsByWeek(ideas)).toEqual([{ weekStart: '2026-01-05', views: 0 }])
   })
+
+  it('buckets by America/New_York, not UTC — a Mon 04:30 UTC posted_at is Sun 23:30 EST', () => {
+    // Same boundary case as countByWeek's test above: 2026-01-05T04:30:00Z is UTC-Monday,
+    // but EST (UTC-5, no DST in January) local time is 2026-01-04 23:30, a Sunday — the
+    // week starting Mon Dec 29, not the week starting Jan 5. A naive UTC/local bucketing
+    // would land this in the wrong week.
+    const result = sumViewsByWeek([makeIdea({ posted_at: '2026-01-05T04:30:00Z', views: 42 })])
+    expect(result).toEqual([{ weekStart: '2025-12-29', views: 42 }])
+  })
 })
 
 describe('postedDaysSet', () => {

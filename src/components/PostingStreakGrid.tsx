@@ -9,12 +9,21 @@ function nyDateKey(date: Date): string {
 }
 
 export default function PostingStreakGrid({ postedDays }: Props) {
+  // Anchor on "today" in NY first, then walk backwards using UTC-day math from
+  // that anchor — never the browser's own local calendar day. Doing the
+  // subtraction in browser-local time (e.g. `date.setDate(date.getDate() - i)`)
+  // can duplicate or skip an NY-calendar day whenever the browser's timezone
+  // differs from America/New_York, since local-day and NY-day boundaries fall
+  // at different UTC instants. Same noon-UTC-anchor trick chartData.ts's
+  // mondayOfWeek/countByWeek already use for this exact class of bug.
+  const [y, m, d] = nyDateKey(new Date()).split('-').map(Number)
+  const anchor = new Date(Date.UTC(y, m - 1, d, 12))
+
   const days: { key: string; posted: boolean }[] = []
-  const now = new Date()
   for (let i = 29; i >= 0; i--) {
-    const d = new Date(now)
-    d.setDate(d.getDate() - i)
-    const key = nyDateKey(d)
+    const cursor = new Date(anchor)
+    cursor.setUTCDate(cursor.getUTCDate() - i)
+    const key = cursor.toISOString().slice(0, 10)
     days.push({ key, posted: postedDays.has(key) })
   }
 
