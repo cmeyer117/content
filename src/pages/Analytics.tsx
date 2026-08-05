@@ -3,7 +3,7 @@ import { useIdeas } from '@/hooks/useIdeas'
 import PillarBadge from '@/components/PillarBadge'
 import BarRow from '@/components/BarRow'
 import PillarStageBreakdown from '@/components/PillarStageBreakdown'
-import { countByStage, countByWeek, countByPillarAndStage } from '@/lib/chartData'
+import { countByStage, sumViewsByWeek, countByPillarAndStage } from '@/lib/chartData'
 import type { ContentIdea } from '@/types/content'
 
 type MetricField = 'views' | 'likes' | 'shares' | 'saves'
@@ -44,8 +44,8 @@ export default function Analytics() {
 
   const stageData = countByStage(ideas)
   const maxStageCount = Math.max(1, ...stageData.map(s => s.count))
-  const weekData = countByWeek(ideas)
-  const maxWeekCount = Math.max(1, ...weekData.map(w => w.count))
+  const weekData = sumViewsByWeek(ideas)
+  const maxWeekViews = Math.max(1, ...weekData.map(w => w.views))
   const pillarStageData = countByPillarAndStage(ideas)
 
   return (
@@ -69,14 +69,14 @@ export default function Analytics() {
 
         <div>
           <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">
-            Idea Velocity{weekData.length > 0 && <span className="normal-case font-normal text-gray-600"> — {formatWeekRange(weekData)}</span>}
+            Views by Week{weekData.length > 0 && <span className="normal-case font-normal text-gray-600"> — {formatWeekRange(weekData)}</span>}
           </p>
           {weekData.length === 0 ? (
-            <p className="text-xs text-gray-600">No ideas yet.</p>
+            <p className="text-xs text-gray-600">No posted content yet.</p>
           ) : (
             <div className="flex flex-col gap-2 mt-2">
               {weekData.map(w => (
-                <BarRow key={w.weekStart} label={w.weekStart} count={w.count} max={maxWeekCount} color="#3b82f6" />
+                <BarRow key={w.weekStart} label={w.weekStart} count={w.views} max={maxWeekViews} color="#3b82f6" />
               ))}
             </div>
           )}
