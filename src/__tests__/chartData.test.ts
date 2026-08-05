@@ -126,6 +126,28 @@ describe('sumViewsByWeek', () => {
   })
 })
 
+describe('postedDaysSet', () => {
+  it('returns NY-local YYYY-MM-DD keys for every idea with a posted_at', () => {
+    const ideas = [
+      makeIdea({ posted_at: '2026-01-05T12:00:00Z' }), // noon UTC = 7am EST, still Jan 5 in NY
+      makeIdea({ posted_at: '2026-01-06T04:30:00Z' }), // 4:30am UTC = Jan 5 11:30pm EST, previous day
+    ]
+    const result = postedDaysSet(ideas)
+    expect(result.has('2026-01-05')).toBe(true)
+    expect(result.has('2026-01-06')).toBe(false)
+    expect(result.size).toBe(1)
+  })
+
+  it('ignores ideas with no posted_at', () => {
+    const result = postedDaysSet([makeIdea({ posted_at: null })])
+    expect(result.size).toBe(0)
+  })
+
+  it('returns an empty set for an empty array', () => {
+    expect(postedDaysSet([]).size).toBe(0)
+  })
+})
+
 describe('countByPillarAndStage', () => {
   it('returns all 5 pillars each with all 6 stage keys, zero-filled where absent', () => {
     const ideas = [makeIdea({ pillar: 'training', status: 'IDEA' }), makeIdea({ pillar: 'training', status: 'DRAFT' })]

@@ -93,6 +93,16 @@ export function sumViewsByWeek(ideas: ContentIdea[]): { weekStart: string; views
   return result
 }
 
+export function postedDaysSet(ideas: ContentIdea[]): Set<string> {
+  const days = new Set<string>()
+  for (const idea of ideas) {
+    if (!idea.posted_at) continue
+    const { year, month, day } = nyDateParts(idea.posted_at)
+    days.add(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`)
+  }
+  return days
+}
+
 export function getTopPerformer(ideas: ContentIdea[]): ContentIdea | null {
   const tracked = ideas.filter(i => i.status === 'TRACKED')
   if (tracked.length === 0) return null
