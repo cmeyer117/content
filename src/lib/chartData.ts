@@ -70,6 +70,29 @@ export function countByWeek(ideas: ContentIdea[]): { weekStart: string; count: n
   return result
 }
 
+export function sumViewsByWeek(ideas: ContentIdea[]): { weekStart: string; views: number }[] {
+  const posted = ideas.filter((i): i is ContentIdea & { posted_at: string } => i.posted_at !== null)
+  if (posted.length === 0) return []
+
+  const sums = new Map<string, number>()
+  for (const idea of posted) {
+    const { year, month, day } = nyDateParts(idea.posted_at)
+    const week = mondayOfWeek(year, month, day)
+    sums.set(week, (sums.get(week) ?? 0) + (idea.views ?? 0))
+  }
+
+  const weeks = [...sums.keys()].sort()
+  const result: { weekStart: string; views: number }[] = []
+  const cursor = new Date(`${weeks[0]}T12:00:00Z`)
+  const last = new Date(`${weeks[weeks.length - 1]}T12:00:00Z`)
+  while (cursor <= last) {
+    const key = cursor.toISOString().slice(0, 10)
+    result.push({ weekStart: key, views: sums.get(key) ?? 0 })
+    cursor.setUTCDate(cursor.getUTCDate() + 7)
+  }
+  return result
+}
+
 export function getTopPerformer(ideas: ContentIdea[]): ContentIdea | null {
   const tracked = ideas.filter(i => i.status === 'TRACKED')
   if (tracked.length === 0) return null

@@ -98,6 +98,34 @@ describe('countByWeek', () => {
   })
 })
 
+describe('sumViewsByWeek', () => {
+  it('returns an empty array when nothing has posted_at set', () => {
+    expect(sumViewsByWeek([makeIdea({ posted_at: null, views: 500 })])).toEqual([])
+  })
+
+  it('buckets by posted_at (America/New_York), summing views instead of counting', () => {
+    const ideas = [
+      makeIdea({ posted_at: '2026-01-05T12:00:00Z', views: 100 }),
+      makeIdea({ posted_at: '2026-01-06T12:00:00Z', views: 50 }),
+      makeIdea({ posted_at: '2026-01-19T12:00:00Z', views: 30 }),
+    ]
+    const result = sumViewsByWeek(ideas)
+    expect(result).toEqual([
+      { weekStart: '2026-01-05', views: 150 },
+      { weekStart: '2026-01-12', views: 0 },
+      { weekStart: '2026-01-19', views: 30 },
+    ])
+  })
+
+  it('treats null views as 0 and ignores ideas with no posted_at', () => {
+    const ideas = [
+      makeIdea({ posted_at: '2026-01-05T12:00:00Z', views: null }),
+      makeIdea({ posted_at: null, views: 9000 }),
+    ]
+    expect(sumViewsByWeek(ideas)).toEqual([{ weekStart: '2026-01-05', views: 0 }])
+  })
+})
+
 describe('countByPillarAndStage', () => {
   it('returns all 5 pillars each with all 6 stage keys, zero-filled where absent', () => {
     const ideas = [makeIdea({ pillar: 'training', status: 'IDEA' }), makeIdea({ pillar: 'training', status: 'DRAFT' })]
