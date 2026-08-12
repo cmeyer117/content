@@ -23,19 +23,22 @@ export default function AuthGate({ children }: { children: ReactNode }) {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    let cancelled = false
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (data.session && !isOwner(data.session)) {
-        await supabase.auth.signOut()
-        if (!cancelled) { setSession(null); setChecked(true) }
-        return
-      }
-      if (!cancelled) { setSession(data.session); setChecked(true) }
-    })
+    // Supabase fires this listener immediately on subscribe with the
+    // current session (or null), then again for every future change -- a
+    // separate getSession() call is redundant and, worse, a race: its
+    // async result could resolve after a later onAuthStateChange event
+    // (e.g. a sign-out) and clobber it with stale state. One source of
+    // truth only.
     const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(isOwner(newSession) ? newSession : null)
+      if (newSession && !isOwner(newSession)) {
+        supabase.auth.signOut()
+        setSession(null)
+      } else {
+        setSession(newSession)
+      }
+      setChecked(true)
     })
-    return () => { cancelled = true; sub.subscription.unsubscribe() }
+    return () => sub.subscription.unsubscribe()
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {
