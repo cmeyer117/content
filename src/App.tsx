@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { IdeasProvider } from './hooks/useIdeas'
 import Layout from './components/Layout'
 import AuthGate from './components/AuthGate'
+import Capture from './pages/Capture'
 import Dashboard from './pages/Dashboard'
 import Ideas from './pages/Ideas'
 import Pipeline from './pages/Pipeline'
@@ -14,7 +15,8 @@ export default function App() {
       <IdeasProvider>
         <Layout>
           <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<Navigate to="/capture" replace />} />
+            <Route path="/capture" element={<Capture />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/ideas" element={<Ideas />} />
             <Route path="/pipeline" element={<Pipeline />} />

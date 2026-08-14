@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import PushSubscribeButton from './PushSubscribeButton'
 
 const nav = [
+  { to: '/capture', label: 'Capture' },
   { to: '/dashboard', label: 'Dashboard' },
   { to: '/ideas', label: 'Ideas' },
   { to: '/pipeline', label: 'Pipeline' },
