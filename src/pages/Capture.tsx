@@ -18,7 +18,7 @@ export default function Capture() {
     if (listError || !data) return
     setPending(
       data
-        .map(o => ({ name: o.name, createdAt: new Date(o.created_at) }))
+        .map(o => ({ name: o.name, createdAt: new Date(o.created_at ?? Date.now()) }))
         .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
     )
   }, [])
