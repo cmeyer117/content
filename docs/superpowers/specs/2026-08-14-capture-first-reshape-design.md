@@ -15,7 +15,7 @@ This is Phase 1 of the reshape: the smallest version that turns "I filmed a take
 
 2. **A capture is a `content_idea` from the moment it's uploaded.** No parallel table, no separate page family. Existing pipeline stages, analytics, and Intel already understand `content_idea` rows — a captured-and-generated take just shows up there pre-filled instead of blank.
 
-3. **Generation is a Claude Code session action, not a live API call.** Content Manager has zero existing paid-API usage anywhere in its source — adding one for this would be new standing spend, which needs Carl's explicit sign-off per his zero-live-API-call policy (the same policy that got Vessel's weekly-review endpoint disabled). Instead: a transcribed-but-not-yet-generated capture is a queued item a Claude Code session picks up (manually, or folded into the existing `content-autopilot` scheduled sweep — see Open Question below) and writes the outputs back to Supabase directly, the same way this session has been doing all day. Zero marginal cost, no new infra to build for it.
+3. **Generation is a Claude Code session action, not a live API call — and it's automatic.** Content Manager has zero existing paid-API usage anywhere in its source — adding one for this would be new standing spend, which needs Carl's explicit sign-off per his zero-live-API-call policy (the same policy that got Vessel's weekly-review endpoint disabled). Instead: a transcribed-but-not-yet-generated capture is picked up by the existing `content-autopilot` scheduled task (runs 2x/day), which writes the outputs back to Supabase directly, the same way this session has been doing all day. Zero marginal cost, no new infra. Decided over a manual trigger specifically because "I almost never use it" is the problem this build exists to fix — a manual generation step just relocates the friction rather than removing it. Accepted tradeoff: a capture uploaded and left un-reviewed right before a sweep runs could generate off an un-edited transcript; not solved with a review-window flag up front (real single-user-app YAGNI call, not an oversight) since the 2x/day cadence already gives hours of natural buffer in practice — revisit only if it actually causes a problem.
 
 ## Data model
 
@@ -60,7 +60,3 @@ This build must not repeat the P1 the 2026-08-14 audit already flagged elsewhere
 - A Format Vault / viral-reference library (Codex's audit proposed this too — good idea, separate build, not blocking this one).
 - Video analysis of any kind (no computer vision, no auto-cut). `cut_notes` is generated text guidance from the transcript, not an automated edit.
 - A settings UI for the 14-day cleanup window — a constant in code is enough for a single-user app.
-
-## Open question for Carl (before the implementation plan)
-
-Should generation be folded into the existing `content-autopilot` scheduled task's sweep (so a transcribed capture gets its caption/hooks/hashtags/cut-notes written automatically without Carl asking), or should it stay a manual "hey, process my captures" trigger? Automatic is more in the spirit of "help me use this more often" but changes `content-autopilot`'s scope — flagging rather than assuming.
