@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildSubscribeUpsertRequest } from './subscribe-push-logic.js'
+import { buildSubscribeUpsertRequest, verifyOwner } from './subscribe-push-logic.js'
 
 describe('buildSubscribeUpsertRequest', () => {
   it('new subscription — POST with merge-duplicates on endpoint conflict', () => {
@@ -17,5 +17,26 @@ describe('buildSubscribeUpsertRequest', () => {
     expect(first.url).toBe(second.url)
     expect(first.options.headers.Prefer).toBe(second.options.headers.Prefer)
     expect(JSON.parse(first.options.body)).not.toEqual(JSON.parse(second.options.body))
+  })
+})
+
+describe('verifyOwner', () => {
+  it('rejects a missing header', async () => {
+    expect(await verifyOwner(undefined)).toBe(false)
+  })
+
+  it('rejects when the auth lookup fails', async () => {
+    const fetchImpl = async () => ({ ok: false })
+    expect(await verifyOwner('Bearer bad-token', fetchImpl)).toBe(false)
+  })
+
+  it('rejects a valid session for a non-owner email', async () => {
+    const fetchImpl = async () => ({ ok: true, json: async () => ({ email: 'someone-else@example.com' }) })
+    expect(await verifyOwner('Bearer some-token', fetchImpl)).toBe(false)
+  })
+
+  it('accepts a valid session for the owner email', async () => {
+    const fetchImpl = async () => ({ ok: true, json: async () => ({ email: 'carl.meyer.business@gmail.com' }) })
+    expect(await verifyOwner('Bearer some-token', fetchImpl)).toBe(true)
   })
 })

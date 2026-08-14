@@ -1,12 +1,16 @@
 // Vercel serverless function — stores a browser's push subscription so
-// send-posting-cadence-nudge.js can push to it later. Mirrors Row's
-// subscribe-push.js exactly (same Supabase project, same publishable-key +
-// open-anon-RLS pattern).
-import { buildSubscribeUpsertRequest } from './subscribe-push-logic.js';
+// send-posting-cadence-nudge.js can push to it later. Requires the caller's
+// Supabase session token to belong to the owner account before writing via
+// the service-role key.
+import { buildSubscribeUpsertRequest, verifyOwner } from './subscribe-push-logic.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+  if (!(await verifyOwner(req.headers.authorization))) {
+    res.status(401).json({ error: 'Unauthorized' });
     return;
   }
   const { endpoint, keys } = req.body || {};

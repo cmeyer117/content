@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { supabase } from '../lib/supabase'
 
 // The public key from the VAPID pair generated for this app — safe to embed
 // client-side, this is the public half.
@@ -40,9 +41,13 @@ export default function PushSubscribeButton() {
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
       })
+      const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch('/api/subscribe-push', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session?.access_token ?? ''}`,
+        },
         body: JSON.stringify(sub.toJSON()),
       })
       if (!res.ok) {
