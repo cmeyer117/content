@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import Capture from '@/pages/Capture'
-import { compressVideo } from '@/lib/videoCompress'
 
 const listMock = vi.fn()
 const uploadMock = vi.fn()
@@ -15,10 +14,6 @@ vi.mock('@/lib/supabase', () => ({
       }),
     },
   },
-}))
-
-vi.mock('@/lib/videoCompress', () => ({
-  compressVideo: vi.fn((file: File) => Promise.resolve(file)),
 }))
 
 beforeEach(() => {
@@ -73,22 +68,5 @@ describe('Capture', () => {
 
     expect(await screen.findByText(/upload failed/i)).toBeTruthy()
     expect(screen.getByRole('button', { name: /retry/i })).toBeTruthy()
-  })
-
-  it('compresses the file before uploading it', async () => {
-    listMock.mockResolvedValue({ data: [], error: null })
-    uploadMock.mockResolvedValue({ error: null })
-    render(<Capture />)
-    await waitFor(() => expect(listMock).toHaveBeenCalled())
-
-    const file = new File(['x'], 'take.mp4', { type: 'video/mp4' })
-    const input = screen.getByLabelText(/upload a take/i)
-    fireEvent.change(input, { target: { files: [file] } })
-
-    await waitFor(() => expect(uploadMock).toHaveBeenCalled())
-    expect(compressVideo).toHaveBeenCalledWith(file)
-    const compressCallOrder = vi.mocked(compressVideo).mock.invocationCallOrder[0]
-    const uploadCallOrder = uploadMock.mock.invocationCallOrder[0]
-    expect(compressCallOrder).toBeLessThan(uploadCallOrder)
   })
 })

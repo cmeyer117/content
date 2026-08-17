@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { captureObjectName, formatCaptureAge } from '@/lib/captureLogic'
-import { compressVideo } from '@/lib/videoCompress'
 
 type PendingCapture = {
   name: string
@@ -10,7 +9,7 @@ type PendingCapture = {
 
 export default function Capture() {
   const [pending, setPending] = useState<PendingCapture[]>([])
-  const [stage, setStage] = useState<'idle' | 'compressing' | 'uploading'>('idle')
+  const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [lastFile, setLastFile] = useState<File | null>(null)
 
@@ -29,25 +28,14 @@ export default function Capture() {
   }, [refresh])
 
   const doUpload = useCallback(async (file: File) => {
+    setUploading(true)
     setError(null)
     setLastFile(file)
-
-    setStage('compressing')
-    let compressed: File
-    try {
-      compressed = await compressVideo(file)
-    } catch (err) {
-      setStage('idle')
-      setError(`Compression failed: ${err instanceof Error ? err.message : String(err)}`)
-      return
-    }
-
-    setStage('uploading')
-    const objectName = captureObjectName(compressed)
+    const objectName = captureObjectName(file)
     const { error: uploadError } = await supabase.storage
       .from('raw-captures')
-      .upload(objectName, compressed, { upsert: false, contentType: compressed.type })
-    setStage('idle')
+      .upload(objectName, file, { upsert: false, contentType: file.type })
+    setUploading(false)
     if (uploadError) {
       setError(`Upload failed: ${uploadError.message}`)
       return
@@ -77,13 +65,13 @@ export default function Capture() {
       </div>
 
       <label className="bg-accent text-white rounded-lg py-3 px-4 text-sm font-medium text-center cursor-pointer disabled:opacity-40">
-        {stage === 'compressing' ? 'Compressing...' : stage === 'uploading' ? 'Uploading...' : 'Upload a take'}
+        {uploading ? 'Uploading...' : 'Upload a take'}
         <input
           type="file"
           accept="video/*"
           className="hidden"
           aria-label="Upload a take"
-          disabled={stage !== 'idle'}
+          disabled={uploading}
           onChange={handleChange}
         />
       </label>
