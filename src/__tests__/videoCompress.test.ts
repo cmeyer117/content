@@ -14,4 +14,13 @@ describe('computeTargetBitrate', () => {
     const boundaryDuration = (48 * 1024 * 1024 * 8) / 8_000_000
     expect(computeTargetBitrate(boundaryDuration)).toBe(8_000_000)
   })
+
+  it('falls back to the ceiling instead of a zero bitrate when duration reads as Infinity', () => {
+    expect(computeTargetBitrate(Infinity)).toBe(8_000_000)
+  })
+
+  it('falls back to the ceiling for a zero or negative duration', () => {
+    expect(computeTargetBitrate(0)).toBe(8_000_000)
+    expect(computeTargetBitrate(-5)).toBe(8_000_000)
+  })
 })

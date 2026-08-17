@@ -8,6 +8,10 @@ const MAX_BITRATE_BPS = 8_000_000
 // a flat conservative bitrate that wastes quality, while still degrading
 // gracefully (lower bitrate, not failure) for long clips.
 export function computeTargetBitrate(durationSeconds: number): number {
+  // video.duration can read as Infinity for some malformed/streaming-style
+  // MP4 containers -- treat any non-finite or non-positive duration as
+  // "use the ceiling" rather than dividing it into a 0 (invalid) bitrate.
+  if (!Number.isFinite(durationSeconds) || durationSeconds <= 0) return MAX_BITRATE_BPS
   const budgetBasedBitrate = (MAX_TARGET_BYTES * 8) / durationSeconds
   return Math.min(MAX_BITRATE_BPS, Math.floor(budgetBasedBitrate))
 }
@@ -59,7 +63,7 @@ export async function compressVideo(file: File): Promise<File> {
   await ffmpeg.writeFile(inputName, new Uint8Array(await file.arrayBuffer()))
   await ffmpeg.exec([
     '-i', inputName,
-    '-vf', "scale='min(1920,iw)':'-2'",
+    '-vf', 'scale=1920:1920:force_original_aspect_ratio=decrease',
     '-b:v', `${bitrate}`,
     '-b:a', '128k',
     outputName,
