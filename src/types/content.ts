@@ -1,6 +1,7 @@
 export type Pillar = 'training' | 'diet' | 'mindset' | 'life' | 'faith'
 export type Platform = 'tiktok' | 'instagram' | 'both'
 export type PipelineStatus = 'IDEA' | 'DRAFT' | 'READY' | 'SCHEDULED' | 'POSTED' | 'TRACKED'
+export type ContentClass = 'technique' | 'craft' | 'transformation' | 'diary'
 
 export type ContentIdea = {
   id: string
@@ -10,6 +11,12 @@ export type ContentIdea = {
   platform: Platform
   status: PipelineStatus
   hook: string | null
+  content_class: ContentClass | null
+  hook_first_2s: string | null
+  viewer_payoff: string | null
+  target_length_seconds: number | null
+  length_justification: string | null
+  diary_justification: string | null
   notes: string | null
   scheduled_at: string | null
   posted_at: string | null
