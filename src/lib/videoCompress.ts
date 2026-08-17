@@ -3,17 +3,23 @@ import { toBlobURL } from '@ffmpeg/util'
 
 const MAX_TARGET_BYTES = 48 * 1024 * 1024
 const MAX_BITRATE_BPS = 8_000_000
+const AUDIO_BITRATE_BPS = 128_000
+// Generous ceiling on the *source* file -- ffmpeg.wasm holds the whole file
+// (input + output) in browser memory, so an enormous accidental selection
+// (wrong file from camera roll) should fail fast with a clear message
+// instead of crashing the tab.
+const MAX_SOURCE_BYTES = 2 * 1024 * 1024 * 1024
 
 // Uses close to the full available upload budget on short clips instead of
 // a flat conservative bitrate that wastes quality, while still degrading
-// gracefully (lower bitrate, not failure) for long clips.
+// gracefully (lower bitrate, not failure) for long clips. Audio is
+// reserved out of the byte budget up front -- otherwise the audio track
+// pushes the total past the budget on top of an already-full video track.
 export function computeTargetBitrate(durationSeconds: number): number {
-  // video.duration can read as Infinity for some malformed/streaming-style
-  // MP4 containers -- treat any non-finite or non-positive duration as
-  // "use the ceiling" rather than dividing it into a 0 (invalid) bitrate.
   if (!Number.isFinite(durationSeconds) || durationSeconds <= 0) return MAX_BITRATE_BPS
-  const budgetBasedBitrate = (MAX_TARGET_BYTES * 8) / durationSeconds
-  return Math.min(MAX_BITRATE_BPS, Math.floor(budgetBasedBitrate))
+  const totalBudgetBitrate = (MAX_TARGET_BYTES * 8) / durationSeconds
+  const videoBudgetBitrate = totalBudgetBitrate - AUDIO_BITRATE_BPS
+  return Math.max(0, Math.min(MAX_BITRATE_BPS, Math.floor(videoBudgetBitrate)))
 }
 
 export function getVideoDuration(file: File): Promise<number> {
@@ -52,7 +58,19 @@ async function getFFmpeg(): Promise<FFmpeg> {
 }
 
 export async function compressVideo(file: File): Promise<File> {
+  if (file.size > MAX_SOURCE_BYTES) {
+    throw new Error('File is too large to compress in the browser -- trim it first')
+  }
+
   const duration = await getVideoDuration(file)
+  // Infinity/NaN duration is a real browser quirk (some malformed/streaming
+  // MP4s), but it tells us nothing about the clip's real length -- guessing
+  // a bitrate here could silently produce a huge file for a genuinely long
+  // clip. Fail loud instead; the caller's existing error UI surfaces this.
+  if (!Number.isFinite(duration)) {
+    throw new Error('Could not determine video length -- try trimming or re-exporting the clip')
+  }
+
   const bitrate = computeTargetBitrate(duration)
   const ffmpeg = await getFFmpeg()
 
@@ -60,18 +78,26 @@ export async function compressVideo(file: File): Promise<File> {
   const inputName = `input${inputExt}`
   const outputName = 'output.mp4'
 
-  await ffmpeg.writeFile(inputName, new Uint8Array(await file.arrayBuffer()))
-  await ffmpeg.exec([
-    '-i', inputName,
-    '-vf', 'scale=1920:1920:force_original_aspect_ratio=decrease',
-    '-b:v', `${bitrate}`,
-    '-b:a', '128k',
-    outputName,
-  ])
-  const data = await ffmpeg.readFile(outputName)
-  await ffmpeg.deleteFile(inputName)
-  await ffmpeg.deleteFile(outputName)
-
-  const outputFileName = file.name.replace(/\.\w+$/, '.mp4')
-  return new File([(data as Uint8Array).slice()], outputFileName, { type: 'video/mp4' })
+  try {
+    await ffmpeg.writeFile(inputName, new Uint8Array(await file.arrayBuffer()))
+    const returnCode = await ffmpeg.exec([
+      '-i', inputName,
+      '-vf', 'scale=1920:1920:force_original_aspect_ratio=decrease',
+      '-b:v', `${bitrate}`,
+      '-b:a', '128k',
+      outputName,
+    ])
+    if (returnCode !== 0) {
+      throw new Error(`ffmpeg exited with code ${returnCode}`)
+    }
+    const data = await ffmpeg.readFile(outputName)
+    const outputFileName = file.name.replace(/\.\w+$/, '.mp4')
+    return new File([(data as Uint8Array).slice()], outputFileName, { type: 'video/mp4' })
+  } finally {
+    // Best-effort -- a file that was never written (e.g. writeFile itself
+    // threw) would make deleteFile throw too, which would mask the real
+    // error above if left uncaught here.
+    await ffmpeg.deleteFile(inputName).catch(() => {})
+    await ffmpeg.deleteFile(outputName).catch(() => {})
+  }
 }
