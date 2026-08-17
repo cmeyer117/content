@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { ContentIdea, Pillar, Platform } from '@/types/content'
+import type { ContentIdea, Pillar, Platform, ContentClass } from '@/types/content'
 import { PILLARS, PLATFORMS } from '@/lib/constants'
 
 type Props = {
@@ -18,6 +18,12 @@ function clampScore(raw: string): number | null {
 export default function IdeaDetailModal({ idea, onClose, onSave }: Props) {
   const [title, setTitle] = useState(idea.title)
   const [hook, setHook] = useState(idea.hook ?? '')
+  const [contentClass, setContentClass] = useState<ContentClass | ''>(idea.content_class ?? '')
+  const [hookFirst2s, setHookFirst2s] = useState(idea.hook_first_2s ?? '')
+  const [viewerPayoff, setViewerPayoff] = useState(idea.viewer_payoff ?? '')
+  const [targetLength, setTargetLength] = useState(idea.target_length_seconds?.toString() ?? '')
+  const [lengthJustification, setLengthJustification] = useState(idea.length_justification ?? '')
+  const [diaryJustification, setDiaryJustification] = useState(idea.diary_justification ?? '')
   const [body, setBody] = useState(idea.body ?? '')
   const [notes, setNotes] = useState(idea.notes ?? '')
   const [pillar, setPillar] = useState<Pillar>(idea.pillar)
@@ -34,6 +40,12 @@ export default function IdeaDetailModal({ idea, onClose, onSave }: Props) {
       await onSave(idea.id, {
         title,
         hook: hook || null,
+        content_class: contentClass || null,
+        hook_first_2s: hookFirst2s || null,
+        viewer_payoff: viewerPayoff || null,
+        target_length_seconds: targetLength.trim() === '' ? null : Math.round(Number(targetLength)),
+        length_justification: lengthJustification || null,
+        diary_justification: diaryJustification || null,
         body: body || null,
         notes: notes || null,
         pillar,
@@ -96,6 +108,65 @@ export default function IdeaDetailModal({ idea, onClose, onSave }: Props) {
           value={notes}
           onChange={e => setNotes(e.target.value)}
         />
+
+        {idea.status === 'IDEA' && (
+          <div className="border border-border rounded-lg p-3 flex flex-col gap-3">
+            <p className="text-xs font-medium text-gray-700">Hook-First Brief</p>
+
+            <select
+              className="bg-surface border border-border rounded-lg px-3 py-2 text-sm text-gray-900"
+              value={contentClass}
+              onChange={e => setContentClass(e.target.value as ContentClass)}
+            >
+              <option value="">Content class...</option>
+              <option value="technique">Technique</option>
+              <option value="craft">Craft</option>
+              <option value="transformation">Transformation</option>
+              <option value="diary">Diary</option>
+            </select>
+
+            <input
+              className="bg-surface border border-border rounded-lg px-4 py-2 text-gray-900 text-sm w-full"
+              placeholder="Opening hook (first 1-2 seconds)"
+              value={hookFirst2s}
+              onChange={e => setHookFirst2s(e.target.value)}
+            />
+
+            <input
+              className="bg-surface border border-border rounded-lg px-4 py-2 text-gray-900 text-sm w-full"
+              placeholder="Viewer payoff (what they get for watching)"
+              value={viewerPayoff}
+              onChange={e => setViewerPayoff(e.target.value)}
+            />
+
+            <input
+              type="number"
+              min={1}
+              className="bg-surface border border-border rounded-lg px-4 py-2 text-gray-900 text-sm w-32"
+              placeholder="Target length (s)"
+              value={targetLength}
+              onChange={e => setTargetLength(e.target.value)}
+            />
+
+            {Number(targetLength) > 30 && (
+              <input
+                className="bg-surface border border-border rounded-lg px-4 py-2 text-gray-900 text-sm w-full"
+                placeholder="Why does this earn extra length?"
+                value={lengthJustification}
+                onChange={e => setLengthJustification(e.target.value)}
+              />
+            )}
+
+            {contentClass === 'diary' && (
+              <input
+                className="bg-surface border border-border rounded-lg px-4 py-2 text-gray-900 text-sm w-full"
+                placeholder="Why does this earn diary treatment anyway?"
+                value={diaryJustification}
+                onChange={e => setDiaryJustification(e.target.value)}
+              />
+            )}
+          </div>
+        )}
 
         <div className="flex gap-3">
           <select
