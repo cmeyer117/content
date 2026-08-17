@@ -90,4 +90,30 @@ describe('IdeaCard', () => {
     render(<IdeaCard idea={idea} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} />)
     expect(screen.queryByText(/🔮/)).toBeNull()
   })
+
+  it('disables Move -> DRAFT when the hook-first gate is not satisfied', () => {
+    render(<IdeaCard idea={idea} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} />)
+    const moveButton = screen.getByText('Move → DRAFT') as HTMLButtonElement
+    expect(moveButton.disabled).toBe(true)
+  })
+
+  it('enables Move -> DRAFT when the hook-first gate is satisfied', () => {
+    const ready = {
+      ...idea,
+      content_class: 'technique' as const,
+      hook_first_2s: 'Open on the failed rep',
+      viewer_payoff: 'The exact cue that fixes it',
+      target_length_seconds: 22,
+    }
+    render(<IdeaCard idea={ready} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} />)
+    const moveButton = screen.getByText('Move → DRAFT') as HTMLButtonElement
+    expect(moveButton.disabled).toBe(false)
+  })
+
+  it('does not gate moves to stages other than DRAFT', () => {
+    const draftIdea = { ...idea, status: 'DRAFT' as const }
+    render(<IdeaCard idea={draftIdea} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} />)
+    const moveButton = screen.getByText('Move → READY') as HTMLButtonElement
+    expect(moveButton.disabled).toBe(false)
+  })
 })

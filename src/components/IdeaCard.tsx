@@ -2,6 +2,7 @@ import type { ContentIdea, PipelineStatus } from '@/types/content'
 import PillarBadge from './PillarBadge'
 import StatusBadge from './StatusBadge'
 import { PIPELINE_STAGES, SUGGESTED_DAYS } from '@/lib/constants'
+import { isReadyForDraft } from '@/lib/hookGate'
 
 type Props = {
   idea: ContentIdea
@@ -13,6 +14,7 @@ type Props = {
 export default function IdeaCard({ idea, onMove, onDelete, onOpen }: Props) {
   const currentIdx = PIPELINE_STAGES.indexOf(idea.status)
   const nextStage = PIPELINE_STAGES[currentIdx + 1] ?? null
+  const gate = nextStage === 'DRAFT' ? isReadyForDraft(idea) : { ready: true, missing: [] }
 
   return (
     <div className="bg-card border border-border rounded-lg p-4 flex flex-col gap-2">
@@ -48,7 +50,9 @@ export default function IdeaCard({ idea, onMove, onDelete, onOpen }: Props) {
       {nextStage && (
         <button
           onClick={e => { e.stopPropagation(); onMove(idea.id, nextStage) }}
-          className="mt-1 text-xs text-accent hover:underline text-left"
+          disabled={!gate.ready}
+          title={gate.ready ? undefined : `Missing: ${gate.missing.join(', ')}`}
+          className="mt-1 text-xs text-accent hover:underline text-left disabled:opacity-40 disabled:no-underline disabled:cursor-not-allowed"
         >
           Move → {nextStage}
         </button>
