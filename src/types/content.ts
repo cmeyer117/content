@@ -2,6 +2,15 @@ export type Pillar = 'training' | 'diet' | 'mindset' | 'life' | 'faith'
 export type Platform = 'tiktok' | 'instagram' | 'both'
 export type PipelineStatus = 'IDEA' | 'DRAFT' | 'READY' | 'SCHEDULED' | 'POSTED' | 'TRACKED'
 export type ContentClass = 'technique' | 'craft' | 'transformation' | 'diary'
+export type ExperimentStatus = 'active' | 'concluded'
+
+export type Experiment = {
+  id: string
+  hypothesis: string
+  status: ExperimentStatus
+  verdict: string | null
+  created_at: string
+}
 
 export type ContentIdea = {
   id: string
@@ -19,6 +28,7 @@ export type ContentIdea = {
   diary_justification: string | null
   notes: string | null
   source_intel_insight_id: string | null
+  experiment_id: string | null
   scheduled_at: string | null
   posted_at: string | null
   views: number | null

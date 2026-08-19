@@ -49,6 +49,7 @@ export default function Intel() {
       diary_justification: null,
       notes: `From creator intel, week of ${insights.find(i => i.id === insightId)?.week_of ?? '?'}`,
       source_intel_insight_id: insightId,
+      experiment_id: null,
       scheduled_at: null,
       posted_at: null,
       views: null,

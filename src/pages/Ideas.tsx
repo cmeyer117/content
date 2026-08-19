@@ -20,6 +20,7 @@ const empty: NewContentIdea = {
   diary_justification: null,
   notes: null,
   source_intel_insight_id: null,
+  experiment_id: null,
   scheduled_at: null,
   posted_at: null,
   views: null,
