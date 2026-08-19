@@ -167,4 +167,40 @@ describe('IdeaDetailModal', () => {
     render(<IdeaDetailModal idea={idea} onClose={() => {}} onSave={async () => {}} />)
     expect(screen.queryByText(/Predicted pattern-fit/)).toBeNull()
   })
+
+  it('shows no experiment checkbox when there is no active experiment', () => {
+    render(<IdeaDetailModal idea={idea} onClose={() => {}} onSave={async () => {}} activeExperiment={null} />)
+    expect(screen.queryByText(/Part of experiment/)).toBeNull()
+  })
+
+  it('shows a checked checkbox when the idea is already tagged into the active experiment', () => {
+    const active = { id: 'exp-1', hypothesis: 'Shorter hooks win', status: 'active' as const, verdict: null, created_at: '2026-08-19T00:00:00Z' }
+    const tagged = { ...idea, experiment_id: 'exp-1' }
+    render(<IdeaDetailModal idea={tagged} onClose={() => {}} onSave={async () => {}} activeExperiment={active} />)
+    const checkbox = screen.getByLabelText(/Part of experiment: Shorter hooks win/) as HTMLInputElement
+    expect(checkbox.checked).toBe(true)
+  })
+
+  it('saves experiment_id when the checkbox is checked', async () => {
+    const active = { id: 'exp-1', hypothesis: 'Shorter hooks win', status: 'active' as const, verdict: null, created_at: '2026-08-19T00:00:00Z' }
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    render(<IdeaDetailModal idea={idea} onClose={() => {}} onSave={onSave} activeExperiment={active} />)
+
+    fireEvent.click(screen.getByLabelText(/Part of experiment: Shorter hooks win/))
+    fireEvent.click(screen.getByRole('button', { name: /save/i }))
+
+    expect(onSave).toHaveBeenCalledWith('idea-1', expect.objectContaining({ experiment_id: 'exp-1' }))
+  })
+
+  it('saves experiment_id as null when the checkbox is unchecked', async () => {
+    const active = { id: 'exp-1', hypothesis: 'Shorter hooks win', status: 'active' as const, verdict: null, created_at: '2026-08-19T00:00:00Z' }
+    const tagged = { ...idea, experiment_id: 'exp-1' }
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    render(<IdeaDetailModal idea={tagged} onClose={() => {}} onSave={onSave} activeExperiment={active} />)
+
+    fireEvent.click(screen.getByLabelText(/Part of experiment: Shorter hooks win/))
+    fireEvent.click(screen.getByRole('button', { name: /save/i }))
+
+    expect(onSave).toHaveBeenCalledWith('idea-1', expect.objectContaining({ experiment_id: null }))
+  })
 })

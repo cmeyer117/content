@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useIdeas } from '@/hooks/useIdeas'
+import { useExperiments } from '@/hooks/useExperiments'
 import IdeaCard from '@/components/IdeaCard'
 import IdeaDetailModal from '@/components/IdeaDetailModal'
 import { PILLARS, PLATFORMS } from '@/lib/constants'
@@ -47,6 +48,7 @@ const empty: NewContentIdea = {
 
 export default function Ideas() {
   const { ideas, loading, add, update, remove } = useIdeas()
+  const { active: activeExperiment } = useExperiments()
   const [form, setForm] = useState<NewContentIdea>(empty)
   const [saving, setSaving] = useState(false)
   const [filterPillar, setFilterPillar] = useState<Pillar | 'all'>('all')
@@ -152,6 +154,7 @@ export default function Ideas() {
           idea={selectedIdea}
           onClose={() => setSelectedIdea(null)}
           onSave={update}
+          activeExperiment={activeExperiment}
         />
       )}
     </div>

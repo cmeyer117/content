@@ -4,11 +4,13 @@ import { PIPELINE_STAGES } from '@/lib/constants'
 import IdeaCard from '@/components/IdeaCard'
 import IdeaDetailModal from '@/components/IdeaDetailModal'
 import { useIdeas } from '@/hooks/useIdeas'
+import { useExperiments } from '@/hooks/useExperiments'
 import type { ContentIdea } from '@/types/content'
 
 export default function Pipeline() {
   const { grouped, loading, moveStage, remove } = usePipeline()
   const { update } = useIdeas()
+  const { active: activeExperiment } = useExperiments()
   const [selectedIdea, setSelectedIdea] = useState<ContentIdea | null>(null)
 
   if (loading) return <p className="text-gray-600 text-sm">Loading...</p>
@@ -50,6 +52,7 @@ export default function Pipeline() {
           idea={selectedIdea}
           onClose={() => setSelectedIdea(null)}
           onSave={update}
+          activeExperiment={activeExperiment}
         />
       )}
     </div>

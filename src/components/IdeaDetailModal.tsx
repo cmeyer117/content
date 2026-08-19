@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import type { ContentIdea, Pillar, Platform, ContentClass } from '@/types/content'
+import type { ContentIdea, Pillar, Platform, ContentClass, Experiment } from '@/types/content'
 import { PILLARS, PLATFORMS } from '@/lib/constants'
 
 type Props = {
   idea: ContentIdea
   onClose: () => void
   onSave: (id: string, changes: Partial<ContentIdea>) => Promise<void>
+  activeExperiment?: Experiment | null
 }
 
 function clampScore(raw: string): number | null {
@@ -15,7 +16,7 @@ function clampScore(raw: string): number | null {
   return Math.min(10, Math.max(1, n))
 }
 
-export default function IdeaDetailModal({ idea, onClose, onSave }: Props) {
+export default function IdeaDetailModal({ idea, onClose, onSave, activeExperiment = null }: Props) {
   const [title, setTitle] = useState(idea.title)
   const [hook, setHook] = useState(idea.hook ?? '')
   const [contentClass, setContentClass] = useState<ContentClass | ''>(idea.content_class ?? '')
@@ -33,6 +34,7 @@ export default function IdeaDetailModal({ idea, onClose, onSave }: Props) {
   const [executionScore, setExecutionScore] = useState(idea.execution_score?.toString() ?? '')
   const [executionScoreNotes, setExecutionScoreNotes] = useState(idea.execution_score_notes ?? '')
   const [saving, setSaving] = useState(false)
+  const [experimentTagged, setExperimentTagged] = useState(idea.experiment_id === activeExperiment?.id && activeExperiment !== null)
 
   const handleSave = async () => {
     setSaving(true)
@@ -54,6 +56,7 @@ export default function IdeaDetailModal({ idea, onClose, onSave }: Props) {
         idea_score_notes: ideaScoreNotes || null,
         execution_score: clampScore(executionScore),
         execution_score_notes: executionScoreNotes || null,
+        experiment_id: experimentTagged && activeExperiment ? activeExperiment.id : null,
       })
       onClose()
     } finally {
@@ -233,6 +236,17 @@ export default function IdeaDetailModal({ idea, onClose, onSave }: Props) {
             <p className="font-medium text-gray-700">🔮 Predicted pattern-fit: {idea.predicted_score}/10</p>
             {idea.predicted_reasoning && <p className="text-xs mt-1">{idea.predicted_reasoning}</p>}
           </div>
+        )}
+
+        {activeExperiment && (
+          <label className="flex items-center gap-2 text-sm text-gray-900">
+            <input
+              type="checkbox"
+              checked={experimentTagged}
+              onChange={e => setExperimentTagged(e.target.checked)}
+            />
+            Part of experiment: {activeExperiment.hypothesis}
+          </label>
         )}
 
         <button
