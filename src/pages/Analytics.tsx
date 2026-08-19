@@ -7,7 +7,7 @@ import PillarStageBreakdown from '@/components/PillarStageBreakdown'
 import ExperimentTable from '@/components/ExperimentTable'
 import { countByStage, sumViewsByWeek, countByPillarAndStage } from '@/lib/chartData'
 import { experimentRows } from '@/lib/experiments'
-import type { ContentIdea, PostPerformance, PostPlatform } from '@/types/content'
+import type { ContentIdeaWithPerformance, PostPerformance, PostPlatform } from '@/types/content'
 
 type MetricField = 'views' | 'likes' | 'shares' | 'saves'
 const METRICS: MetricField[] = ['views', 'likes', 'shares', 'saves']
@@ -18,7 +18,7 @@ function formatWeekRange(weeks: { weekStart: string }[]): string {
   return weeks.length === 1 ? fmt(weeks[0].weekStart) : `${fmt(weeks[0].weekStart)} – ${fmt(weeks[weeks.length - 1].weekStart)}`
 }
 
-function ExperimentQueue({ ideas }: { ideas: ContentIdea[] }) {
+function ExperimentQueue({ ideas }: { ideas: ContentIdeaWithPerformance[] }) {
   const { experiments, active, loading, start, conclude } = useExperiments()
   const [hypothesis, setHypothesis] = useState('')
   const [verdict, setVerdict] = useState('')
