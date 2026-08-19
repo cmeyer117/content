@@ -118,7 +118,12 @@ export default function Analytics() {
     const draftKey = `${ideaId}:${platform}`
     const changes = editing[draftKey]
     if (!changes) return
-    await savePerformance(ideaId, platform, { ...changes, posted_at: changes.posted_at ?? new Date().toISOString() })
+    // Only stamp posted_at on this platform's first-ever save -- an edit to
+    // an already-tracked row must never silently move it to a different
+    // week in sumViewsByWeek's bucketing.
+    const existing = ideas.find(i => i.id === ideaId)?.performances.find(p => p.platform === platform)
+    const posted_at = changes.posted_at ?? existing?.posted_at ?? new Date().toISOString()
+    await savePerformance(ideaId, platform, { ...changes, posted_at })
     await update(ideaId, { status: 'TRACKED' })
     setEditing(prev => {
       const next = { ...prev }
