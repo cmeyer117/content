@@ -203,4 +203,16 @@ describe('IdeaDetailModal', () => {
 
     expect(onSave).toHaveBeenCalledWith('idea-1', expect.objectContaining({ experiment_id: null }))
   })
+
+  it('preserves experiment_id for an idea tagged into a different, non-active experiment on an unrelated save', async () => {
+    const active = { id: 'exp-2', hypothesis: 'New hypothesis', status: 'active' as const, verdict: null, created_at: '2026-08-19T00:00:00Z' }
+    const taggedElsewhere = { ...idea, experiment_id: 'exp-1' }
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    render(<IdeaDetailModal idea={taggedElsewhere} onClose={() => {}} onSave={onSave} activeExperiment={active} />)
+
+    fireEvent.change(screen.getByDisplayValue('Original title'), { target: { value: 'Fixed typo' } })
+    fireEvent.click(screen.getByRole('button', { name: /save/i }))
+
+    expect(onSave).toHaveBeenCalledWith('idea-1', expect.objectContaining({ experiment_id: 'exp-1' }))
+  })
 })

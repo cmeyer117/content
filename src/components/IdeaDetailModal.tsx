@@ -56,7 +56,9 @@ export default function IdeaDetailModal({ idea, onClose, onSave, activeExperimen
         idea_score_notes: ideaScoreNotes || null,
         execution_score: clampScore(executionScore),
         execution_score_notes: executionScoreNotes || null,
-        experiment_id: experimentTagged && activeExperiment ? activeExperiment.id : null,
+        experiment_id: activeExperiment
+          ? (experimentTagged ? activeExperiment.id : (idea.experiment_id === activeExperiment.id ? null : idea.experiment_id))
+          : idea.experiment_id,
       })
       onClose()
     } finally {
