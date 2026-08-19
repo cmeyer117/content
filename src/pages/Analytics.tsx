@@ -7,7 +7,7 @@ import PillarStageBreakdown from '@/components/PillarStageBreakdown'
 import ExperimentTable from '@/components/ExperimentTable'
 import { countByStage, sumViewsByWeek, countByPillarAndStage } from '@/lib/chartData'
 import { experimentRows } from '@/lib/experiments'
-import type { ContentIdea } from '@/types/content'
+import type { ContentIdea, PostPerformance, PostPlatform } from '@/types/content'
 
 type MetricField = 'views' | 'likes' | 'shares' | 'saves'
 const METRICS: MetricField[] = ['views', 'likes', 'shares', 'saves']
@@ -109,26 +109,28 @@ function ExperimentQueue({ ideas }: { ideas: ContentIdea[] }) {
 }
 
 export default function Analytics() {
-  const { ideas, loading, update } = useIdeas()
-  const [editing, setEditing] = useState<Record<string, Partial<ContentIdea>>>({})
+  const { ideas, loading, update, savePerformance } = useIdeas()
+  const [editing, setEditing] = useState<Record<string, Partial<PostPerformance>>>({})
 
   const posted = ideas.filter(i => i.status === 'POSTED' || i.status === 'TRACKED')
 
-  const handleSave = async (id: string) => {
-    const changes = editing[id]
+  const handleSave = async (ideaId: string, platform: PostPlatform) => {
+    const draftKey = `${ideaId}:${platform}`
+    const changes = editing[draftKey]
     if (!changes) return
-    await update(id, { ...changes, status: 'TRACKED' })
+    await savePerformance(ideaId, platform, { ...changes, posted_at: changes.posted_at ?? new Date().toISOString() })
+    await update(ideaId, { status: 'TRACKED' })
     setEditing(prev => {
       const next = { ...prev }
-      delete next[id]
+      delete next[draftKey]
       return next
     })
   }
 
-  const handleCancel = (id: string) => {
+  const handleCancel = (draftKey: string) => {
     setEditing(prev => {
       const next = { ...prev }
-      delete next[id]
+      delete next[draftKey]
       return next
     })
   }
@@ -192,77 +194,70 @@ export default function Analytics() {
         <p className="text-gray-600 text-sm">No posted content yet. Move ideas to POSTED in the Pipeline.</p>
       )}
       {posted.map(idea => {
-        const draft = editing[idea.id] ?? {}
-        const isEditing = !!editing[idea.id]
+        const platforms: PostPlatform[] = idea.platform === 'both' ? ['tiktok', 'instagram'] : [idea.platform]
         return (
-          <div key={idea.id} className="bg-card border border-border rounded-xl p-5 flex flex-col gap-3">
+          <div key={idea.id} className="bg-card border border-border rounded-xl p-5 flex flex-col gap-4">
             <div className="flex items-start gap-3">
               <PillarBadge pillar={idea.pillar} />
               <p className="text-sm font-medium text-gray-900">{idea.title}</p>
             </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500 uppercase tracking-wide">
-                {idea.platform === 'instagram' ? 'Post URL' : 'TikTok Post URL'} (auto-syncs stats weekly)
-              </label>
-              <input
-                type="url"
-                placeholder="https://www.tiktok.com/@you/video/..."
-                className="bg-surface border border-border rounded px-2 py-1 text-sm text-gray-900 w-full"
-                value={draft.post_url ?? idea.post_url ?? ''}
-                onChange={e => setEditing(prev => ({
-                  ...prev,
-                  [idea.id]: { ...(prev[idea.id] ?? {}), post_url: e.target.value || null },
-                }))}
-              />
-            </div>
-            {idea.platform === 'both' && (
-              <div className="flex flex-col gap-1">
-                <label className="text-xs text-gray-500 uppercase tracking-wide">Instagram Post URL (auto-syncs stats weekly)</label>
-                <input
-                  type="url"
-                  placeholder="https://www.instagram.com/reel/..."
-                  className="bg-surface border border-border rounded px-2 py-1 text-sm text-gray-900 w-full"
-                  value={draft.post_url_instagram ?? idea.post_url_instagram ?? ''}
-                  onChange={e => setEditing(prev => ({
-                    ...prev,
-                    [idea.id]: { ...(prev[idea.id] ?? {}), post_url_instagram: e.target.value || null },
-                  }))}
-                />
-              </div>
-            )}
-            <div className="grid grid-cols-4 gap-3">
-              {METRICS.map(m => (
-                <div key={m} className="flex flex-col gap-1">
-                  <label className="text-xs text-gray-500 uppercase tracking-wide">{m}</label>
-                  <input
-                    type="number"
-                    min={0}
-                    className="bg-surface border border-border rounded px-2 py-1 text-sm text-gray-900 w-full"
-                    value={(draft as Record<string, number | null | undefined>)[m] ?? idea[m as keyof ContentIdea] ?? ''}
-                    onChange={e => setEditing(prev => ({
-                      ...prev,
-                      [idea.id]: { ...(prev[idea.id] ?? {}), [m]: Number(e.target.value) },
-                    }))}
-                  />
+            {platforms.map(platform => {
+              const existing = idea.performances.find(p => p.platform === platform)
+              const draftKey = `${idea.id}:${platform}`
+              const draft = editing[draftKey] ?? {}
+              const isEditing = !!editing[draftKey]
+              return (
+                <div key={platform} className="border border-border rounded-lg p-3 flex flex-col gap-3">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">{platform}</p>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs text-gray-500 uppercase tracking-wide">Post URL (auto-syncs stats weekly)</label>
+                    <input
+                      type="url"
+                      placeholder={platform === 'tiktok' ? 'https://www.tiktok.com/@you/video/...' : 'https://www.instagram.com/reel/...'}
+                      className="bg-surface border border-border rounded px-2 py-1 text-sm text-gray-900 w-full"
+                      value={draft.post_url ?? existing?.post_url ?? ''}
+                      onChange={e => setEditing(prev => ({
+                        ...prev,
+                        [draftKey]: { ...(prev[draftKey] ?? {}), post_url: e.target.value || null },
+                      }))}
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 gap-3">
+                    {METRICS.map(m => (
+                      <div key={m} className="flex flex-col gap-1">
+                        <label className="text-xs text-gray-500 uppercase tracking-wide">{m}</label>
+                        <input
+                          type="number"
+                          min={0}
+                          className="bg-surface border border-border rounded px-2 py-1 text-sm text-gray-900 w-full"
+                          value={(draft as Record<string, number | null | undefined>)[m] ?? (existing?.[m] as number | null) ?? ''}
+                          onChange={e => setEditing(prev => ({
+                            ...prev,
+                            [draftKey]: { ...(prev[draftKey] ?? {}), [m]: Number(e.target.value) },
+                          }))}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  {isEditing && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => void handleSave(idea.id, platform)}
+                        className="bg-accent text-white text-xs rounded px-3 py-1"
+                      >
+                        Save + Mark Tracked
+                      </button>
+                      <button
+                        onClick={() => handleCancel(draftKey)}
+                        className="bg-surface border border-border text-gray-500 text-xs rounded px-3 py-1"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
-            {isEditing && (
-              <div className="flex gap-2">
-                <button
-                  onClick={() => void handleSave(idea.id)}
-                  className="bg-accent text-white text-xs rounded px-3 py-1"
-                >
-                  Save + Mark Tracked
-                </button>
-                <button
-                  onClick={() => handleCancel(idea.id)}
-                  className="bg-surface border border-border text-gray-500 text-xs rounded px-3 py-1"
-                >
-                  Cancel
-                </button>
-              </div>
-            )}
+              )
+            })}
           </div>
         )
       })}
