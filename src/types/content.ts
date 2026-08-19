@@ -18,6 +18,7 @@ export type ContentIdea = {
   length_justification: string | null
   diary_justification: string | null
   notes: string | null
+  source_intel_insight_id: string | null
   scheduled_at: string | null
   posted_at: string | null
   views: number | null
@@ -37,6 +38,8 @@ export type ContentIdea = {
   metricool_reach: number | null
   metricool_engagement_rate: number | null
   metricool_comments: number | null
+  metricool_3s_retention_pct: number | null
+  metricool_watch_through_ratio: number | null
   metricool_synced_at: string | null
   created_at: string
 }
