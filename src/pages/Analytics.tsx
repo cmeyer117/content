@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { useIdeas } from '@/hooks/useIdeas'
+import { useExperiments } from '@/hooks/useExperiments'
 import PillarBadge from '@/components/PillarBadge'
 import BarRow from '@/components/BarRow'
 import PillarStageBreakdown from '@/components/PillarStageBreakdown'
+import ExperimentTable from '@/components/ExperimentTable'
 import { countByStage, sumViewsByWeek, countByPillarAndStage } from '@/lib/chartData'
+import { experimentRows } from '@/lib/experiments'
 import type { ContentIdea } from '@/types/content'
 
 type MetricField = 'views' | 'likes' | 'shares' | 'saves'
@@ -13,6 +16,96 @@ function formatWeekRange(weeks: { weekStart: string }[]): string {
   if (weeks.length === 0) return ''
   const fmt = (iso: string) => new Date(`${iso}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   return weeks.length === 1 ? fmt(weeks[0].weekStart) : `${fmt(weeks[0].weekStart)} – ${fmt(weeks[weeks.length - 1].weekStart)}`
+}
+
+function ExperimentQueue({ ideas }: { ideas: ContentIdea[] }) {
+  const { experiments, active, loading, start, conclude } = useExperiments()
+  const [hypothesis, setHypothesis] = useState('')
+  const [verdict, setVerdict] = useState('')
+  const [starting, setStarting] = useState(false)
+  const [concluding, setConcluding] = useState(false)
+
+  if (loading) return null
+
+  const concludedExperiments = experiments.filter(e => e.status === 'concluded')
+
+  const handleStart = async () => {
+    if (!hypothesis.trim()) return
+    setStarting(true)
+    try {
+      await start(hypothesis.trim())
+      setHypothesis('')
+    } finally {
+      setStarting(false)
+    }
+  }
+
+  const handleConclude = async () => {
+    if (!active || !verdict.trim()) return
+    setConcluding(true)
+    try {
+      await conclude(active.id, verdict.trim())
+      setVerdict('')
+    } finally {
+      setConcluding(false)
+    }
+  }
+
+  return (
+    <section className="flex flex-col gap-3">
+      <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Experiment Queue</p>
+
+      {!active ? (
+        <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-3">
+          <input
+            className="bg-surface border border-border rounded-lg px-4 py-2 text-gray-900 text-sm w-full"
+            placeholder='Hypothesis (e.g. "technique posts outperform diary posts")'
+            value={hypothesis}
+            onChange={e => setHypothesis(e.target.value)}
+          />
+          <button
+            onClick={() => void handleStart()}
+            disabled={starting || !hypothesis.trim()}
+            className="bg-accent text-white text-xs rounded px-3 py-1 self-start disabled:opacity-40"
+          >
+            {starting ? 'Starting...' : 'Start Experiment'}
+          </button>
+        </div>
+      ) : (
+        <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-3">
+          <p className="text-sm font-medium text-gray-900">{active.hypothesis}</p>
+          <ExperimentTable rows={experimentRows(ideas, active.id)} />
+          <textarea
+            className="bg-surface border border-border rounded-lg px-4 py-2 text-gray-900 text-sm w-full min-h-[80px]"
+            placeholder="Verdict — what did this tell you?"
+            value={verdict}
+            onChange={e => setVerdict(e.target.value)}
+          />
+          <button
+            onClick={() => void handleConclude()}
+            disabled={concluding || !verdict.trim()}
+            className="bg-accent text-white text-xs rounded px-3 py-1 self-start disabled:opacity-40"
+          >
+            {concluding ? 'Concluding...' : 'Conclude Experiment'}
+          </button>
+        </div>
+      )}
+
+      {concludedExperiments.length > 0 && (
+        <div className="flex flex-col gap-2">
+          {concludedExperiments.map(e => (
+            <details key={e.id} className="bg-card border border-border rounded-xl p-3">
+              <summary className="text-sm font-medium text-gray-900 cursor-pointer">{e.hypothesis}</summary>
+              <p className="text-xs text-gray-600 mt-2">{e.verdict}</p>
+              <div className="mt-2">
+                <ExperimentTable rows={experimentRows(ideas, e.id)} />
+              </div>
+            </details>
+          ))}
+        </div>
+      )}
+    </section>
+  )
 }
 
 export default function Analytics() {
@@ -51,6 +144,8 @@ export default function Analytics() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
+
+      <ExperimentQueue ideas={ideas} />
 
       {/* Pipeline Overview */}
       <section className="flex flex-col gap-6">
