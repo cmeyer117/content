@@ -24,12 +24,6 @@ const empty: NewContentIdea = {
   experiment_id: null,
   scheduled_at: null,
   posted_at: null,
-  views: null,
-  likes: null,
-  shares: null,
-  saves: null,
-  post_url: null,
-  post_url_instagram: null,
   idea_score: null,
   idea_score_notes: null,
   execution_score: null,
@@ -38,12 +32,6 @@ const empty: NewContentIdea = {
   predicted_reasoning: null,
   predicted_at: null,
   prediction_version: null,
-  metricool_reach: null,
-  metricool_engagement_rate: null,
-  metricool_comments: null,
-  metricool_3s_retention_pct: null,
-  metricool_watch_through_ratio: null,
-  metricool_synced_at: null,
 }
 
 export default function Ideas() {

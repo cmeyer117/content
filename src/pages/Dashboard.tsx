@@ -1,6 +1,6 @@
 import { useIdeas } from '@/hooks/useIdeas'
 import { PIPELINE_STAGES, PILLAR_HEX, PIPELINE_STAGE_COLORS, PILLARS } from '@/lib/constants'
-import { sumViewsByPillar, getTopPerformer, getTopNByViews, postedDaysSet, metricoolTotals } from '@/lib/chartData'
+import { sumViewsByPillar, getTopPerformer, getTopNByViews, postedDaysSet, metricoolTotals, flattenPerformances } from '@/lib/chartData'
 import BarRow from '@/components/BarRow'
 import SpotlightCard from '@/components/SpotlightCard'
 import EmptyState from '@/components/EmptyState'
@@ -14,12 +14,13 @@ export default function Dashboard() {
   )
 
   const tracked = ideas.filter(i => i.status === 'TRACKED')
-  const totalViews = tracked.reduce((sum, i) => sum + (i.views ?? 0), 0)
-  const totalShares = tracked.reduce((sum, i) => sum + (i.shares ?? 0), 0)
+  const trackedPerf = flattenPerformances(tracked)
+  const totalViews = trackedPerf.reduce((sum, { perf }) => sum + (perf.views ?? 0), 0)
+  const totalShares = trackedPerf.reduce((sum, { perf }) => sum + (perf.shares ?? 0), 0)
 
   const topPerformer = getTopPerformer(ideas)
   const topByViews = getTopNByViews(ideas, 5)
-  const maxViews = topByViews[0]?.views ?? 0
+  const maxViews = topByViews[0]?.perf.views ?? 0
 
   const postedDays = postedDaysSet(ideas)
   const { totalReach, avgEngagementRate } = metricoolTotals(ideas)
@@ -79,7 +80,7 @@ export default function Dashboard() {
       {/* Spotlight */}
       <section>
         <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Spotlight</p>
-        <SpotlightCard idea={topPerformer} />
+        <SpotlightCard top={topPerformer} />
       </section>
 
       {/* Vs. Your Best */}
@@ -89,11 +90,11 @@ export default function Dashboard() {
           {topByViews.length === 0 ? (
             <EmptyState message="Track a few posts to see how they compare to each other." icon="📊" />
           ) : (
-            topByViews.map(idea => (
+            topByViews.map(({ idea, perf }) => (
               <BarRow
-                key={idea.id}
-                label={idea.title}
-                count={idea.views ?? 0}
+                key={`${idea.id}:${perf.platform}`}
+                label={`${idea.title} (${perf.platform})`}
+                count={perf.views ?? 0}
                 max={maxViews}
                 color={PILLAR_HEX[idea.pillar]}
               />

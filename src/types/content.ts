@@ -31,12 +31,6 @@ export type ContentIdea = {
   experiment_id: string | null
   scheduled_at: string | null
   posted_at: string | null
-  views: number | null
-  likes: number | null
-  shares: number | null
-  saves: number | null
-  post_url: string | null
-  post_url_instagram: string | null
   idea_score: number | null
   idea_score_notes: string | null
   execution_score: number | null
@@ -45,6 +39,23 @@ export type ContentIdea = {
   predicted_reasoning: string | null
   predicted_at: string | null
   prediction_version: string | null
+  created_at: string
+}
+
+export type NewContentIdea = Omit<ContentIdea, 'id' | 'created_at'>
+
+export type PostPlatform = 'tiktok' | 'instagram'
+
+export type PostPerformance = {
+  id: string
+  content_idea_id: string
+  platform: PostPlatform
+  post_url: string | null
+  posted_at: string | null
+  views: number | null
+  likes: number | null
+  shares: number | null
+  saves: number | null
   metricool_reach: number | null
   metricool_engagement_rate: number | null
   metricool_comments: number | null
@@ -54,4 +65,6 @@ export type ContentIdea = {
   created_at: string
 }
 
-export type NewContentIdea = Omit<ContentIdea, 'id' | 'created_at'>
+export type NewPostPerformance = Omit<PostPerformance, 'id' | 'created_at'>
+
+export type ContentIdeaWithPerformance = ContentIdea & { performances: PostPerformance[] }

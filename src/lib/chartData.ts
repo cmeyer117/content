@@ -1,5 +1,15 @@
-import type { ContentIdea, Pillar, PipelineStatus } from '@/types/content'
+import type { ContentIdea, ContentIdeaWithPerformance, Pillar, PipelineStatus, PostPerformance } from '@/types/content'
 import { PILLARS, PIPELINE_STAGES } from '@/lib/constants'
+
+export type IdeaPerf = { idea: ContentIdeaWithPerformance; perf: PostPerformance }
+
+// Flattens each idea's performance rows into one entry per (idea, platform)
+// pair -- a `both`-platform idea with TikTok and Instagram data contributes
+// two independent entries, not one blended one. That's the whole point of
+// the per-platform split: it's more signal, not double-counting.
+export function flattenPerformances(ideas: ContentIdeaWithPerformance[]): IdeaPerf[] {
+  return ideas.flatMap(idea => idea.performances.map(perf => ({ idea, perf })))
+}
 
 export function countByPillar(ideas: ContentIdea[]): { pillar: Pillar; label: string; count: number }[] {
   return PILLARS.map(p => ({
@@ -9,12 +19,12 @@ export function countByPillar(ideas: ContentIdea[]): { pillar: Pillar; label: st
   }))
 }
 
-export function sumViewsByPillar(ideas: ContentIdea[]): { pillar: Pillar; label: string; views: number }[] {
-  const tracked = ideas.filter(i => i.status === 'TRACKED')
+export function sumViewsByPillar(ideas: ContentIdeaWithPerformance[]): { pillar: Pillar; label: string; views: number }[] {
+  const tracked = flattenPerformances(ideas.filter(i => i.status === 'TRACKED'))
   return PILLARS.map(p => ({
     pillar: p.value,
     label: p.label,
-    views: tracked.filter(i => i.pillar === p.value).reduce((sum, i) => sum + (i.views ?? 0), 0),
+    views: tracked.filter(({ idea }) => idea.pillar === p.value).reduce((sum, { perf }) => sum + (perf.views ?? 0), 0),
   }))
 }
 
@@ -70,15 +80,15 @@ export function countByWeek(ideas: ContentIdea[]): { weekStart: string; count: n
   return result
 }
 
-export function sumViewsByWeek(ideas: ContentIdea[]): { weekStart: string; views: number }[] {
-  const posted = ideas.filter((i): i is ContentIdea & { posted_at: string } => i.posted_at !== null)
+export function sumViewsByWeek(ideas: ContentIdeaWithPerformance[]): { weekStart: string; views: number }[] {
+  const posted = flattenPerformances(ideas).filter((ip): ip is IdeaPerf & { perf: { posted_at: string } } => ip.perf.posted_at !== null)
   if (posted.length === 0) return []
 
   const sums = new Map<string, number>()
-  for (const idea of posted) {
-    const { year, month, day } = nyDateParts(idea.posted_at)
+  for (const { perf } of posted) {
+    const { year, month, day } = nyDateParts(perf.posted_at)
     const week = mondayOfWeek(year, month, day)
-    sums.set(week, (sums.get(week) ?? 0) + (idea.views ?? 0))
+    sums.set(week, (sums.get(week) ?? 0) + (perf.views ?? 0))
   }
 
   const weeks = [...sums.keys()].sort()
@@ -106,31 +116,30 @@ export function postedDaysSet(ideas: ContentIdea[]): Set<string> {
 // metricool_engagement_rate is stored in Supabase as a plain percentage
 // (e.g. 3.52 means 3.52%, confirmed via direct query 2026-08-05) — do not
 // multiply by 100.
-export function metricoolTotals(ideas: ContentIdea[]): { totalReach: number; avgEngagementRate: number | null } {
-  const tracked = ideas.filter(i => i.status === 'TRACKED')
-  const totalReach = tracked.reduce((sum, i) => sum + (i.metricool_reach ?? 0), 0)
-  const rates = tracked.map(i => i.metricool_engagement_rate).filter((r): r is number => r !== null)
+export function metricoolTotals(ideas: ContentIdeaWithPerformance[]): { totalReach: number; avgEngagementRate: number | null } {
+  const tracked = flattenPerformances(ideas.filter(i => i.status === 'TRACKED'))
+  const totalReach = tracked.reduce((sum, { perf }) => sum + (perf.metricool_reach ?? 0), 0)
+  const rates = tracked.map(({ perf }) => perf.metricool_engagement_rate).filter((r): r is number => r !== null)
   const avgEngagementRate = rates.length > 0 ? rates.reduce((sum, r) => sum + r, 0) / rates.length : null
   return { totalReach, avgEngagementRate }
 }
 
-export function getTopPerformer(ideas: ContentIdea[]): ContentIdea | null {
-  const tracked = ideas.filter(i => i.status === 'TRACKED')
+export function getTopPerformer(ideas: ContentIdeaWithPerformance[]): IdeaPerf | null {
+  const tracked = flattenPerformances(ideas.filter(i => i.status === 'TRACKED'))
   if (tracked.length === 0) return null
   return tracked.reduce((best, current) => {
-    const bestViews = best.views ?? 0
-    const currentViews = current.views ?? 0
+    const bestViews = best.perf.views ?? 0
+    const currentViews = current.perf.views ?? 0
     if (currentViews > bestViews) return current
-    if (currentViews === bestViews && current.created_at > best.created_at) return current
+    if (currentViews === bestViews && current.idea.created_at > best.idea.created_at) return current
     return best
   })
 }
 
-export function getTopNByViews(ideas: ContentIdea[], n: number): ContentIdea[] {
+export function getTopNByViews(ideas: ContentIdeaWithPerformance[], n: number): IdeaPerf[] {
   if (n <= 0) return []
-  return ideas
-    .filter(i => i.status === 'TRACKED')
-    .sort((a, b) => (b.views ?? 0) - (a.views ?? 0))
+  return flattenPerformances(ideas.filter(i => i.status === 'TRACKED'))
+    .sort((a, b) => (b.perf.views ?? 0) - (a.perf.views ?? 0))
     .slice(0, n)
 }
 
