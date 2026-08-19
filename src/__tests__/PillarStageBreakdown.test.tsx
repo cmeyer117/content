@@ -13,7 +13,8 @@ function makeIdea(overrides: Partial<ContentIdea>): ContentIdea {
     shares: null, saves: null, post_url: null, post_url_instagram: null, idea_score: null, idea_score_notes: null,
     execution_score: null, execution_score_notes: null, predicted_score: null,
     predicted_reasoning: null, predicted_at: null, prediction_version: null,
-    metricool_reach: null, metricool_engagement_rate: null, metricool_comments: null, metricool_synced_at: null,
+    metricool_reach: null, metricool_engagement_rate: null, metricool_comments: null, metricool_3s_retention_pct: null, metricool_watch_through_ratio: null, metricool_synced_at: null,
+    source_intel_insight_id: null,
     created_at: '2026-01-01T12:00:00Z',
     ...overrides,
   }

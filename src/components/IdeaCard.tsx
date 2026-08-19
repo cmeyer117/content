@@ -50,6 +50,9 @@ export default function IdeaCard({ idea, onMove, onDelete, onOpen }: Props) {
         {idea.predicted_score != null && (
           <span className="text-xs text-gray-600" title={idea.predicted_reasoning ?? undefined}>🔮 {idea.predicted_score}</span>
         )}
+        {idea.source_intel_insight_id && (
+          <span className="text-xs text-gray-600" title="Originated from a creator intel insight">🧠 from intel</span>
+        )}
       </div>
       {nextStage && (
         <button

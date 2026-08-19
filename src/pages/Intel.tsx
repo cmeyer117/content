@@ -48,6 +48,7 @@ export default function Intel() {
       length_justification: null,
       diary_justification: null,
       notes: `From creator intel, week of ${insights.find(i => i.id === insightId)?.week_of ?? '?'}`,
+      source_intel_insight_id: insightId,
       scheduled_at: null,
       posted_at: null,
       views: null,
@@ -67,6 +68,8 @@ export default function Intel() {
       metricool_reach: null,
       metricool_engagement_rate: null,
       metricool_comments: null,
+      metricool_3s_retention_pct: null,
+      metricool_watch_through_ratio: null,
       metricool_synced_at: null,
     })
     setAdded(prev => ({ ...prev, [insightId]: true }))

@@ -37,7 +37,10 @@ const idea: ContentIdea = {
   metricool_reach: null,
   metricool_engagement_rate: null,
   metricool_comments: null,
+  metricool_3s_retention_pct: null,
+  metricool_watch_through_ratio: null,
   metricool_synced_at: null,
+  source_intel_insight_id: null,
   created_at: '2026-07-13T00:00:00.000Z',
 }
 

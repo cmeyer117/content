@@ -19,6 +19,7 @@ const empty: NewContentIdea = {
   length_justification: null,
   diary_justification: null,
   notes: null,
+  source_intel_insight_id: null,
   scheduled_at: null,
   posted_at: null,
   views: null,
@@ -38,6 +39,8 @@ const empty: NewContentIdea = {
   metricool_reach: null,
   metricool_engagement_rate: null,
   metricool_comments: null,
+  metricool_3s_retention_pct: null,
+  metricool_watch_through_ratio: null,
   metricool_synced_at: null,
 }
 
