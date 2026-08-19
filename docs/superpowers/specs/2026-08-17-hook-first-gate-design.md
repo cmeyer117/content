@@ -48,8 +48,8 @@ Returns the specific missing fields, not just a boolean, so the UI can show exac
 
 ## UI
 
-- **`IdeaCard`'s "Move → DRAFT" button** is disabled (not hidden) when `isReadyForDraft(idea).ready` is false, with `title` set to the missing-fields list for a hover tooltip. This only applies when `nextStage === 'DRAFT'` — the gate doesn't touch any other pipeline transition (DRAFT→READY, READY→SCHEDULED, etc.).
-- **`IdeaDetailModal`** gets a new "Hook-First Brief" section, shown only while `idea.status === 'IDEA'`. Contains: a `content_class` select, `hook_first_2s` and `viewer_payoff` text inputs, `target_length_seconds` number input. `length_justification` renders conditionally once `target_length_seconds > 30`; `diary_justification` renders conditionally once `content_class === 'diary'` — same conditional-field pattern already used elsewhere in the modal.
+- **`IdeaCard`'s "Move → READY" button** is disabled (not hidden) when `isReadyForDraft(idea).ready` is false, with `title` set to the missing-fields list for a hover tooltip. This only applies when `nextStage === 'READY'` — the gate doesn't touch any other pipeline transition (IDEA→DRAFT, READY→SCHEDULED, etc.). **Corrected 2026-08-19:** originally gated `nextStage === 'DRAFT'` (IDEA→DRAFT), a semantic mismatch against the stated intent of gating the READY decision point — found via a Codex code review, fixed same day.
+- **`IdeaDetailModal`** gets a new "Hook-First Brief" section, shown while `idea.status === 'IDEA' || idea.status === 'DRAFT'` — editable through drafting since a draft may still evolve its hook fields before the READY gate matters. **Corrected 2026-08-19:** originally shown only in `IDEA`, which meant the fields became read-only/hidden before the gate (now at DRAFT→READY) ever checked them.
 
 ## Testing
 
@@ -66,6 +66,6 @@ Returns the specific missing fields, not just a boolean, so the UI can show exac
 
 ## Out of Scope
 
-- No changes to any pipeline stage past DRAFT.
+- No changes to any pipeline stage past READY (SCHEDULED, POSTED, TRACKED untouched).
 - No retroactive backfill of the 6 new fields on existing rows — they stay null until each idea is manually visited.
 - No enforcement mechanism beyond the UI button disable (a direct Supabase write could still bypass it) — matches the rest of this single-user app's trust model, not worth a DB-level CHECK constraint for one operator.

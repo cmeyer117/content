@@ -14,7 +14,11 @@ type Props = {
 export default function IdeaCard({ idea, onMove, onDelete, onOpen }: Props) {
   const currentIdx = PIPELINE_STAGES.indexOf(idea.status)
   const nextStage = PIPELINE_STAGES[currentIdx + 1] ?? null
-  const gate = nextStage === 'DRAFT' ? isReadyForDraft(idea) : { ready: true, missing: [] }
+  // Gate the transition into READY, not IDEA -> DRAFT -- a draft may still
+  // evolve, but a READY post shouldn't exist without hook-quality fields set.
+  // Fixed 2026-08-19: was gating the wrong transition (see hookGate.ts and
+  // IdeaDetailModal.tsx's matching fix).
+  const gate = nextStage === 'READY' ? isReadyForDraft(idea) : { ready: true, missing: [] }
 
   return (
     <div className="bg-card border border-border rounded-lg p-4 flex flex-col gap-2">

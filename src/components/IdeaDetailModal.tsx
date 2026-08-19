@@ -109,8 +109,13 @@ export default function IdeaDetailModal({ idea, onClose, onSave }: Props) {
           onChange={e => setNotes(e.target.value)}
         />
 
-        {idea.status === 'IDEA' && (
+        {(idea.status === 'IDEA' || idea.status === 'DRAFT') && (
           <div className="border border-border rounded-lg p-3 flex flex-col gap-3">
+            {/* Editable through IDEA and DRAFT -- the gate itself now enforces
+                at the DRAFT -> READY transition (IdeaCard.tsx), so a draft can
+                still evolve its hook fields before the gate matters. Fixed
+                2026-08-19: previously only editable in IDEA, but the gate
+                didn't check anything until READY was 2 stages later. */}
             <p className="text-xs font-medium text-gray-700">Hook-First Brief</p>
 
             <select

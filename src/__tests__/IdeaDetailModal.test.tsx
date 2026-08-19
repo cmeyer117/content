@@ -76,6 +76,22 @@ describe('IdeaDetailModal', () => {
     expect(onClose).toHaveBeenCalled()
   })
 
+  // Fixed 2026-08-19: the Hook-First Brief was previously editable only in
+  // IDEA, but the gate (IdeaCard.tsx) now checks these fields at the
+  // DRAFT -> READY transition, two stages later -- so a draft needed to be
+  // able to still edit them.
+  it('shows the Hook-First Brief while in DRAFT, not just IDEA', () => {
+    const draftIdea = { ...idea, status: 'DRAFT' as const }
+    render(<IdeaDetailModal idea={draftIdea} onClose={() => {}} onSave={async () => {}} />)
+    expect(screen.getByText('Hook-First Brief')).toBeTruthy()
+  })
+
+  it('hides the Hook-First Brief once past DRAFT', () => {
+    const readyIdea = { ...idea, status: 'READY' as const }
+    render(<IdeaDetailModal idea={readyIdea} onClose={() => {}} onSave={async () => {}} />)
+    expect(screen.queryByText('Hook-First Brief')).toBeNull()
+  })
+
   it('renders existing score fields', () => {
     const scored: ContentIdea = {
       ...idea,

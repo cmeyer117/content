@@ -91,29 +91,41 @@ describe('IdeaCard', () => {
     expect(screen.queryByText(/🔮/)).toBeNull()
   })
 
-  it('disables Move -> DRAFT when the hook-first gate is not satisfied', () => {
+  // Fixed 2026-08-19: the gate previously applied to IDEA -> DRAFT, a
+  // semantic mismatch against the stated intent of protecting the READY
+  // decision point (found via a Codex code review). Now applies to
+  // DRAFT -> READY instead.
+  it('does not gate Move -> DRAFT regardless of hook-first fields', () => {
     render(<IdeaCard idea={idea} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} />)
     const moveButton = screen.getByText('Move → DRAFT') as HTMLButtonElement
+    expect(moveButton.disabled).toBe(false)
+  })
+
+  it('disables Move -> READY when the hook-first gate is not satisfied', () => {
+    const draftIdea = { ...idea, status: 'DRAFT' as const }
+    render(<IdeaCard idea={draftIdea} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} />)
+    const moveButton = screen.getByText('Move → READY') as HTMLButtonElement
     expect(moveButton.disabled).toBe(true)
   })
 
-  it('enables Move -> DRAFT when the hook-first gate is satisfied', () => {
+  it('enables Move -> READY when the hook-first gate is satisfied', () => {
     const ready = {
       ...idea,
+      status: 'DRAFT' as const,
       content_class: 'technique' as const,
       hook_first_2s: 'Open on the failed rep',
       viewer_payoff: 'The exact cue that fixes it',
       target_length_seconds: 22,
     }
     render(<IdeaCard idea={ready} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} />)
-    const moveButton = screen.getByText('Move → DRAFT') as HTMLButtonElement
+    const moveButton = screen.getByText('Move → READY') as HTMLButtonElement
     expect(moveButton.disabled).toBe(false)
   })
 
-  it('does not gate moves to stages other than DRAFT', () => {
-    const draftIdea = { ...idea, status: 'DRAFT' as const }
-    render(<IdeaCard idea={draftIdea} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} />)
-    const moveButton = screen.getByText('Move → READY') as HTMLButtonElement
+  it('does not gate moves to stages other than READY', () => {
+    const readyIdea = { ...idea, status: 'READY' as const }
+    render(<IdeaCard idea={readyIdea} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} />)
+    const moveButton = screen.getByText('Move → SCHEDULED') as HTMLButtonElement
     expect(moveButton.disabled).toBe(false)
   })
 })
