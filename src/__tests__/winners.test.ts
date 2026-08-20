@@ -72,6 +72,66 @@ describe('detectWinners', () => {
     expect(detectWinners(ideas, NOW)).toEqual([])
   })
 
+  it('computes a true-middle median for an odd-length baseline (5 posts)', () => {
+    // Candidate(20) + rest(10,10,12,5) sorted: 5,10,10,12,20 -> middle
+    // element is 10, a true median (not an average of two), and no other
+    // post in the window crosses 2x that median on its own.
+    const rest = baseline([10, 10, 12, 5], 'tiktok', 11)
+    const candidate = makeIdea({
+      id: 'odd-winner',
+      status: 'TRACKED',
+      performances: [makePerformance({ id: 'perf-odd', content_idea_id: 'odd-winner', platform: 'tiktok', views: 20, posted_at: new Date(NOW.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString() })],
+    })
+    const winners = detectWinners([...rest, candidate], NOW)
+    expect(winners).toHaveLength(1)
+    expect(winners[0].baselineMedian).toBe(10)
+    expect(winners[0].multiple).toBe(2)
+  })
+
+  it('flags exactly at the 2.00x boundary (inclusive)', () => {
+    const rest = baseline([10, 10, 10, 10, 10], 'tiktok', 10)
+    const exact = makeIdea({
+      id: 'exact-2x',
+      status: 'TRACKED',
+      performances: [makePerformance({ id: 'perf-exact-2x', content_idea_id: 'exact-2x', platform: 'tiktok', views: 20, posted_at: new Date(NOW.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString() })],
+    })
+    const winners = detectWinners([...rest, exact], NOW)
+    expect(winners.map(w => w.idea.id)).toContain('exact-2x')
+  })
+
+  it('does not flag just under the 2.00x boundary', () => {
+    const rest = baseline([10, 10, 10, 10, 10], 'tiktok', 10)
+    const justUnder = makeIdea({
+      id: 'under-2x',
+      status: 'TRACKED',
+      performances: [makePerformance({ id: 'perf-under-2x', content_idea_id: 'under-2x', platform: 'tiktok', views: 19, posted_at: new Date(NOW.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString() })],
+    })
+    const winners = detectWinners([...rest, justUnder], NOW)
+    expect(winners.map(w => w.idea.id)).not.toContain('under-2x')
+  })
+
+  it('flags exactly at the 7-day-old boundary (inclusive)', () => {
+    const rest = baseline([10, 10, 10, 10, 10], 'tiktok', 8)
+    const exactlySevenDays = makeIdea({
+      id: 'exact-7d',
+      status: 'TRACKED',
+      performances: [makePerformance({ id: 'perf-exact-7d', content_idea_id: 'exact-7d', platform: 'tiktok', views: 100, posted_at: new Date(NOW.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString() })],
+    })
+    const winners = detectWinners([...rest, exactlySevenDays], NOW)
+    expect(winners.map(w => w.idea.id)).toContain('exact-7d')
+  })
+
+  it('does not flag just under the 7-day-old boundary', () => {
+    const rest = baseline([10, 10, 10, 10, 10], 'tiktok', 8)
+    const justUnderSevenDays = makeIdea({
+      id: 'under-7d',
+      status: 'TRACKED',
+      performances: [makePerformance({ id: 'perf-under-7d', content_idea_id: 'under-7d', platform: 'tiktok', views: 100, posted_at: new Date(NOW.getTime() - 6.9 * 24 * 60 * 60 * 1000).toISOString() })],
+    })
+    const winners = detectWinners([...rest, justUnderSevenDays], NOW)
+    expect(winners.map(w => w.idea.id)).not.toContain('under-7d')
+  })
+
   it('does not flag a winner-shaped post younger than 7 days', () => {
     const rest = baseline([10, 10, 10, 10, 10], 'tiktok', 10)
     const tooYoung = makeIdea({

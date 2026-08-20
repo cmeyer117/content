@@ -62,13 +62,31 @@ export default function WinnerSignals({ ideas }: { ideas: ContentIdeaWithPerform
         // Roll back whichever ones DID succeed -- leaving 1-2 orphan drafts
         // would also silently make this winner disappear from future
         // detectWinners passes (usedPerformanceIds only needs one match),
-        // with no way to retry. Best-effort: a rollback delete failing too
-        // just leaves a manually-cleanable orphan, never worse than before.
-        await Promise.allSettled(
+        // with no way to retry. This is best-effort, not a hard guarantee:
+        // a rollback delete can itself fail (network), and useIdeas.tsx's
+        // realtime subscription does full unsequenced reloads on every
+        // insert/delete event -- a slow, out-of-order reload could briefly
+        // resurrect a just-deleted draft in local state. Both are pre-
+        // existing properties of this app's realtime architecture, not
+        // something a client-side retry loop can fully close; a genuinely
+        // atomic "exactly 3 or none" guarantee would need a server-side
+        // RPC, disproportionate for a DRAFT-only feature. Surface the
+        // distinction instead of silently claiming success either way.
+        const rollback = await Promise.allSettled(
           results
             .filter((r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof add>>> => r.status === 'fulfilled')
             .map(r => remove(r.value.id)),
         )
+        // If a rollback delete itself fails, that follow-up's
+        // series_source_performance_id is now set, which excludes this
+        // winner from future detectWinners passes -- this card disappears
+        // on the next render regardless of what UI state is set here, so a
+        // per-card error message can't reliably reach Carl for this rare
+        // double-failure case. console.error is the honest fallback: a
+        // real trace to find the orphan by, not a silently swallowed error.
+        if (rollback.some(r => r.status === 'rejected')) {
+          console.error('Winner→Series rollback partially failed — orphan draft(s) may remain for source performance', winner.perf.id, rollback)
+        }
         setFailedId(winner.perf.id)
       }
     } catch {
