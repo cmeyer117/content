@@ -11,6 +11,7 @@ function makeIdea(overrides: Partial<ContentIdeaWithPerformance>): ContentIdeaWi
     execution_score: null, execution_score_notes: null, predicted_score: null,
     predicted_reasoning: null, predicted_at: null, prediction_version: null,
     source_intel_insight_id: null, experiment_id: null,
+    series_source_performance_id: null, angle: null, position: null,
     created_at: '2026-01-01T12:00:00Z',
     performances: [],
     ...overrides,

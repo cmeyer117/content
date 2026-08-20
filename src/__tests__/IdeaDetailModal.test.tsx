@@ -30,6 +30,9 @@ const idea: ContentIdea = {
   prediction_version: null,
   source_intel_insight_id: null,
   experiment_id: null,
+  series_source_performance_id: null,
+  angle: null,
+  position: null,
   created_at: '2026-07-13T00:00:00.000Z',
 }
 
