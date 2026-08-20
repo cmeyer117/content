@@ -103,11 +103,11 @@ export function sumViewsByWeek(ideas: ContentIdeaWithPerformance[]): { weekStart
   return result
 }
 
-export function postedDaysSet(ideas: ContentIdea[]): Set<string> {
+export function postedDaysSet(ideas: ContentIdeaWithPerformance[]): Set<string> {
   const days = new Set<string>()
-  for (const idea of ideas) {
-    if (!idea.posted_at) continue
-    const { year, month, day } = nyDateParts(idea.posted_at)
+  for (const { perf } of flattenPerformances(ideas)) {
+    if (!perf.posted_at) continue
+    const { year, month, day } = nyDateParts(perf.posted_at)
     days.add(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`)
   }
   return days

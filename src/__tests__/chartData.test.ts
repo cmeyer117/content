@@ -166,10 +166,12 @@ describe('sumViewsByWeek', () => {
 })
 
 describe('postedDaysSet', () => {
-  it('returns NY-local YYYY-MM-DD keys for every idea with a posted_at', () => {
+  it('returns NY-local YYYY-MM-DD keys for every performance row with a posted_at', () => {
     const ideas = [
-      makeIdea({ posted_at: '2026-01-05T12:00:00Z' }), // noon UTC = 7am EST, still Jan 5 in NY
-      makeIdea({ posted_at: '2026-01-06T04:30:00Z' }), // 4:30am UTC = Jan 5 11:30pm EST, previous day
+      // noon UTC = 7am EST, still Jan 5 in NY
+      makeIdea({ platform: 'tiktok', performances: [makePerformance({ platform: 'tiktok', posted_at: '2026-01-05T12:00:00Z' })] }),
+      // 4:30am UTC = Jan 5 11:30pm EST, previous day
+      makeIdea({ platform: 'tiktok', performances: [makePerformance({ platform: 'tiktok', posted_at: '2026-01-06T04:30:00Z' })] }),
     ]
     const result = postedDaysSet(ideas)
     expect(result.has('2026-01-05')).toBe(true)
@@ -177,8 +179,31 @@ describe('postedDaysSet', () => {
     expect(result.size).toBe(1)
   })
 
-  it('ignores ideas with no posted_at', () => {
-    const result = postedDaysSet([makeIdea({ posted_at: null })])
+  it('includes Instagram-only posted ideas', () => {
+    const ideas = [
+      makeIdea({ platform: 'instagram', performances: [makePerformance({ platform: 'instagram', posted_at: '2026-01-05T12:00:00Z' })] }),
+    ]
+    expect(postedDaysSet(ideas).has('2026-01-05')).toBe(true)
+  })
+
+  it('includes both dates for a both-platform idea posted on different days', () => {
+    const ideas = [
+      makeIdea({
+        platform: 'both',
+        performances: [
+          makePerformance({ platform: 'tiktok', posted_at: '2026-01-05T12:00:00Z' }),
+          makePerformance({ platform: 'instagram', posted_at: '2026-01-07T12:00:00Z' }),
+        ],
+      }),
+    ]
+    const result = postedDaysSet(ideas)
+    expect(result.has('2026-01-05')).toBe(true)
+    expect(result.has('2026-01-07')).toBe(true)
+    expect(result.size).toBe(2)
+  })
+
+  it('ignores performance rows with no posted_at', () => {
+    const result = postedDaysSet([makeIdea({ performances: [makePerformance({ posted_at: null })] })])
     expect(result.size).toBe(0)
   })
 
