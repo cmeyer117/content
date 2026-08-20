@@ -7,7 +7,7 @@ import type { ContentIdeaWithPerformance, NewContentIdea } from '@/types/content
 const dash = (v: string | number | null) => v ?? '—'
 
 export default function WinnerSignals({ ideas }: { ideas: ContentIdeaWithPerformance[] }) {
-  const { add } = useIdeas()
+  const { add, remove } = useIdeas()
   const [creating, setCreating] = useState<string | null>(null)
   const [failedId, setFailedId] = useState<string | null>(null)
 
@@ -23,7 +23,7 @@ export default function WinnerSignals({ ideas }: { ideas: ContentIdeaWithPerform
     setCreating(winner.perf.id)
     setFailedId(null)
     try {
-      await Promise.all(SERIES_ANGLES.map((a, i) => {
+      const results = await Promise.allSettled(SERIES_ANGLES.map((a, i) => {
         const followUp: NewContentIdea = {
           title: `${winner.idea.title} — ${a.label}`,
           body: null,
@@ -56,6 +56,21 @@ export default function WinnerSignals({ ideas }: { ideas: ContentIdeaWithPerform
         }
         return add(followUp)
       }))
+
+      const failures = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+      if (failures.length > 0) {
+        // Roll back whichever ones DID succeed -- leaving 1-2 orphan drafts
+        // would also silently make this winner disappear from future
+        // detectWinners passes (usedPerformanceIds only needs one match),
+        // with no way to retry. Best-effort: a rollback delete failing too
+        // just leaves a manually-cleanable orphan, never worse than before.
+        await Promise.allSettled(
+          results
+            .filter((r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof add>>> => r.status === 'fulfilled')
+            .map(r => remove(r.value.id)),
+        )
+        setFailedId(winner.perf.id)
+      }
     } catch {
       setFailedId(winner.perf.id)
     } finally {
