@@ -89,7 +89,7 @@ Clicking "Create 3 Follow-ups" calls `useIdeas().add()` three times (`Promise.al
   position: index + 1,
 }
 ```
-After creation, the card collapses to a small "3 follow-ups created" confirmation (the winner is now filtered out of `detectWinners`'s next pass since its `series_source_performance_id` is in use).
+After creation, the card simply disappears — no separate "created" UI state needed, since `useIdeas().add()` already updates state in real time; once the 3 follow-ups exist, `detectWinners` naturally excludes the winner on the next render (its `series_source_performance_id` is now in use). Discovered during implementation that a local `created` tracking Set was dead weight given this.
 
 ## Error handling
 

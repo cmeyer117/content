@@ -40,7 +40,12 @@ export type ContentIdea = {
   predicted_at: string | null
   prediction_version: string | null
   created_at: string
+  series_source_performance_id: string | null
+  angle: SeriesAngle | null
+  position: number | null
 }
+
+export type SeriesAngle = 'same-promise' | 'objection' | 'progression'
 
 export type NewContentIdea = Omit<ContentIdea, 'id' | 'created_at'>
 

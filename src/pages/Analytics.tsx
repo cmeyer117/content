@@ -5,6 +5,7 @@ import PillarBadge from '@/components/PillarBadge'
 import BarRow from '@/components/BarRow'
 import PillarStageBreakdown from '@/components/PillarStageBreakdown'
 import ExperimentTable from '@/components/ExperimentTable'
+import WinnerSignals from '@/components/WinnerSignals'
 import { countByStage, sumViewsByWeek, countByPillarAndStage } from '@/lib/chartData'
 import { experimentRows } from '@/lib/experiments'
 import type { ContentIdeaWithPerformance, PostPerformance, PostPlatform } from '@/types/content'
@@ -151,6 +152,8 @@ export default function Analytics() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
+
+      <WinnerSignals ideas={ideas} />
 
       <ExperimentQueue ideas={ideas} />
 
