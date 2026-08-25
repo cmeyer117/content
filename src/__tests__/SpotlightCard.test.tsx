@@ -8,7 +8,7 @@ function makeIdea(overrides: Partial<ContentIdeaWithPerformance>): ContentIdeaWi
     id: 'x', title: 'My best post', body: null, pillar: 'training', platform: 'tiktok', status: 'TRACKED',
     hook: null, content_class: null, hook_first_2s: null, viewer_payoff: null,
     target_length_seconds: null, length_justification: null, diary_justification: null,
-    notes: null, scheduled_at: null, posted_at: '2026-07-20T12:00:00Z', idea_score: null, idea_score_notes: null,
+    notes: null, scheduled_at: null, publish_at: null, posted_at: '2026-07-20T12:00:00Z', idea_score: null, idea_score_notes: null,
     execution_score: null, execution_score_notes: null, predicted_score: null,
     predicted_reasoning: null, predicted_at: null, prediction_version: null,
     source_intel_insight_id: null, experiment_id: null,

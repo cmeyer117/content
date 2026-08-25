@@ -30,6 +30,7 @@ export type ContentIdea = {
   source_intel_insight_id: string | null
   experiment_id: string | null
   scheduled_at: string | null
+  publish_at: string | null
   posted_at: string | null
   idea_score: number | null
   idea_score_notes: string | null

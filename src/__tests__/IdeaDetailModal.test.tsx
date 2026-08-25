@@ -19,6 +19,7 @@ const idea: ContentIdea = {
   diary_justification: null,
   notes: 'Original notes',
   scheduled_at: null,
+  publish_at: null,
   posted_at: null,
   idea_score: null,
   idea_score_notes: null,

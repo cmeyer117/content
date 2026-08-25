@@ -41,6 +41,7 @@ export default function WinnerSignals({ ideas }: { ideas: ContentIdeaWithPerform
           source_intel_insight_id: null,
           experiment_id: null,
           scheduled_at: null,
+          publish_at: null,
           posted_at: null,
           idea_score: null,
           idea_score_notes: null,
