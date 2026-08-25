@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useIdeas } from '@/hooks/useIdeas'
+import { usePipeline } from '@/hooks/usePipeline'
 import { useExperiments } from '@/hooks/useExperiments'
 import IdeaCard from '@/components/IdeaCard'
 import IdeaDetailModal from '@/components/IdeaDetailModal'
+import ScheduleIdeaModal from '@/components/ScheduleIdeaModal'
 import { PILLARS, PLATFORMS } from '@/lib/constants'
 import type { Pillar, Platform, NewContentIdea, ContentIdea } from '@/types/content'
 
@@ -40,11 +42,13 @@ const empty: NewContentIdea = {
 
 export default function Ideas() {
   const { ideas, loading, add, update, remove } = useIdeas()
+  const { moveStage, scheduleIdea } = usePipeline()
   const { active: activeExperiment } = useExperiments()
   const [form, setForm] = useState<NewContentIdea>(empty)
   const [saving, setSaving] = useState(false)
   const [filterPillar, setFilterPillar] = useState<Pillar | 'all'>('all')
   const [selectedIdea, setSelectedIdea] = useState<ContentIdea | null>(null)
+  const [scheduleTarget, setScheduleTarget] = useState<ContentIdea | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -131,9 +135,10 @@ export default function Ideas() {
             <IdeaCard
               key={idea.id}
               idea={idea}
-              onMove={(id, status) => void update(id, { status })}
+              onMove={moveStage}
               onDelete={(id) => void remove(id)}
               onOpen={setSelectedIdea}
+              onScheduleRequest={setScheduleTarget}
             />
           ))}
           {filtered.length === 0 && (
@@ -147,6 +152,13 @@ export default function Ideas() {
           onClose={() => setSelectedIdea(null)}
           onSave={update}
           activeExperiment={activeExperiment}
+        />
+      )}
+      {scheduleTarget && (
+        <ScheduleIdeaModal
+          idea={scheduleTarget}
+          onClose={() => setScheduleTarget(null)}
+          onSchedule={scheduleIdea}
         />
       )}
     </div>

@@ -41,7 +41,7 @@ describe('IdeaCard', () => {
   it('calls onOpen when the card body is clicked', () => {
     const onOpen = vi.fn()
     render(
-      <IdeaCard idea={idea} onMove={() => {}} onDelete={() => {}} onOpen={onOpen} />
+      <IdeaCard idea={idea} onMove={() => {}} onDelete={() => {}} onOpen={onOpen} onScheduleRequest={() => {}} />
     )
     fireEvent.click(screen.getByText('Card title'))
     expect(onOpen).toHaveBeenCalledWith(idea)
@@ -51,7 +51,7 @@ describe('IdeaCard', () => {
     const onOpen = vi.fn()
     const onDelete = vi.fn()
     render(
-      <IdeaCard idea={idea} onMove={() => {}} onDelete={onDelete} onOpen={onOpen} />
+      <IdeaCard idea={idea} onMove={() => {}} onDelete={onDelete} onOpen={onOpen} onScheduleRequest={() => {}} />
     )
     fireEvent.click(screen.getByText('✕'))
     expect(onDelete).toHaveBeenCalledWith('idea-1')
@@ -60,30 +60,30 @@ describe('IdeaCard', () => {
 
   it('shows an idea score badge when idea_score is set', () => {
     const scored = { ...idea, idea_score: 8 }
-    render(<IdeaCard idea={scored} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} />)
+    render(<IdeaCard idea={scored} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} onScheduleRequest={() => {}} />)
     expect(screen.getByText('🎯 8')).toBeTruthy()
   })
 
   it('shows an execution score badge when execution_score is set', () => {
     const scored = { ...idea, execution_score: 6 }
-    render(<IdeaCard idea={scored} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} />)
+    render(<IdeaCard idea={scored} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} onScheduleRequest={() => {}} />)
     expect(screen.getByText('🎬 6')).toBeTruthy()
   })
 
   it('shows no score badges when both scores are null', () => {
-    render(<IdeaCard idea={idea} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} />)
+    render(<IdeaCard idea={idea} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} onScheduleRequest={() => {}} />)
     expect(screen.queryByText(/🎯/)).toBeNull()
     expect(screen.queryByText(/🎬/)).toBeNull()
   })
 
   it('shows a predicted score badge when predicted_score is set', () => {
     const predicted = { ...idea, predicted_score: 8 }
-    render(<IdeaCard idea={predicted} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} />)
+    render(<IdeaCard idea={predicted} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} onScheduleRequest={() => {}} />)
     expect(screen.getByText('🔮 8')).toBeTruthy()
   })
 
   it('shows no predicted score badge when predicted_score is null', () => {
-    render(<IdeaCard idea={idea} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} />)
+    render(<IdeaCard idea={idea} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} onScheduleRequest={() => {}} />)
     expect(screen.queryByText(/🔮/)).toBeNull()
   })
 
@@ -92,14 +92,14 @@ describe('IdeaCard', () => {
   // decision point (found via a Codex code review). Now applies to
   // DRAFT -> READY instead.
   it('does not gate Move -> DRAFT regardless of hook-first fields', () => {
-    render(<IdeaCard idea={idea} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} />)
+    render(<IdeaCard idea={idea} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} onScheduleRequest={() => {}} />)
     const moveButton = screen.getByText('Move → DRAFT') as HTMLButtonElement
     expect(moveButton.disabled).toBe(false)
   })
 
   it('disables Move -> READY when the hook-first gate is not satisfied', () => {
     const draftIdea = { ...idea, status: 'DRAFT' as const }
-    render(<IdeaCard idea={draftIdea} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} />)
+    render(<IdeaCard idea={draftIdea} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} onScheduleRequest={() => {}} />)
     const moveButton = screen.getByText('Move → READY') as HTMLButtonElement
     expect(moveButton.disabled).toBe(true)
   })
@@ -113,15 +113,25 @@ describe('IdeaCard', () => {
       viewer_payoff: 'The exact cue that fixes it',
       target_length_seconds: 22,
     }
-    render(<IdeaCard idea={ready} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} />)
+    render(<IdeaCard idea={ready} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} onScheduleRequest={() => {}} />)
     const moveButton = screen.getByText('Move → READY') as HTMLButtonElement
     expect(moveButton.disabled).toBe(false)
   })
 
   it('does not gate moves to stages other than READY', () => {
     const readyIdea = { ...idea, status: 'READY' as const }
-    render(<IdeaCard idea={readyIdea} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} />)
-    const moveButton = screen.getByText('Move → SCHEDULED') as HTMLButtonElement
+    render(<IdeaCard idea={readyIdea} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} onScheduleRequest={() => {}} />)
+    const moveButton = screen.getByText('Schedule →') as HTMLButtonElement
     expect(moveButton.disabled).toBe(false)
+  })
+
+  it('invokes onScheduleRequest instead of onMove when a READY card is moved to SCHEDULED', () => {
+    const onMove = vi.fn()
+    const onScheduleRequest = vi.fn()
+    const readyIdea = { ...idea, status: 'READY' as const }
+    render(<IdeaCard idea={readyIdea} onMove={onMove} onDelete={() => {}} onOpen={() => {}} onScheduleRequest={onScheduleRequest} />)
+    fireEvent.click(screen.getByText('Schedule →'))
+    expect(onScheduleRequest).toHaveBeenCalledWith(readyIdea)
+    expect(onMove).not.toHaveBeenCalled()
   })
 })

@@ -9,9 +9,10 @@ type Props = {
   onMove: (id: string, status: PipelineStatus) => void
   onDelete: (id: string) => void
   onOpen: (idea: ContentIdea) => void
+  onScheduleRequest: (idea: ContentIdea) => void
 }
 
-export default function IdeaCard({ idea, onMove, onDelete, onOpen }: Props) {
+export default function IdeaCard({ idea, onMove, onDelete, onOpen, onScheduleRequest }: Props) {
   const currentIdx = PIPELINE_STAGES.indexOf(idea.status)
   const nextStage = PIPELINE_STAGES[currentIdx + 1] ?? null
   // Gate the transition into READY, not IDEA -> DRAFT -- a draft may still
@@ -56,12 +57,16 @@ export default function IdeaCard({ idea, onMove, onDelete, onOpen }: Props) {
       </div>
       {nextStage && (
         <button
-          onClick={e => { e.stopPropagation(); onMove(idea.id, nextStage) }}
+          onClick={e => {
+            e.stopPropagation()
+            if (nextStage === 'SCHEDULED') onScheduleRequest(idea)
+            else onMove(idea.id, nextStage)
+          }}
           disabled={!gate.ready}
           title={gate.ready ? undefined : `Missing: ${gate.missing.join(', ')}`}
           className="mt-1 text-xs text-accent hover:underline text-left disabled:opacity-40 disabled:no-underline disabled:cursor-not-allowed"
         >
-          Move → {nextStage}
+          {nextStage === 'SCHEDULED' ? 'Schedule →' : `Move → ${nextStage}`}
         </button>
       )}
       {nextStage === 'SCHEDULED' && (

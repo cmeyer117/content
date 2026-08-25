@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useIdeas } from './useIdeas'
 import { PIPELINE_STAGES } from '@/lib/constants'
+import { publishInputToIso } from '@/lib/publishQueue'
 import type { PipelineStatus, ContentIdea } from '@/types/content'
 
 export function usePipeline() {
@@ -35,5 +36,21 @@ export function usePipeline() {
     return update(id, patch)
   }
 
-  return { grouped, loading, error, moveStage, remove }
+  // Required entry point for READY -> SCHEDULED: a publish time must exist
+  // before the transition happens, so this bypasses moveStage entirely
+  // rather than layering a time on top of a status-only move. Preserves the
+  // historical scheduled_at (first-entry-into-SCHEDULED audit stamp) exactly
+  // as moveStage already does -- only publish_at is new here.
+  const scheduleIdea = (id: string, publishInput: string) => {
+    const iso = publishInputToIso(publishInput)
+    if (!iso) return Promise.reject(new Error('Enter a valid publish time.'))
+    const idea = ideas.find(i => i.id === id)
+    const patch: Partial<ContentIdea> = { status: 'SCHEDULED', publish_at: iso }
+    if (idea && !idea.scheduled_at) {
+      patch.scheduled_at = new Date().toISOString()
+    }
+    return update(id, patch)
+  }
+
+  return { grouped, loading, error, moveStage, scheduleIdea, remove }
 }

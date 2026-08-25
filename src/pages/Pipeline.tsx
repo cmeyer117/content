@@ -3,15 +3,17 @@ import { usePipeline } from '@/hooks/usePipeline'
 import { PIPELINE_STAGES } from '@/lib/constants'
 import IdeaCard from '@/components/IdeaCard'
 import IdeaDetailModal from '@/components/IdeaDetailModal'
+import ScheduleIdeaModal from '@/components/ScheduleIdeaModal'
 import { useIdeas } from '@/hooks/useIdeas'
 import { useExperiments } from '@/hooks/useExperiments'
 import type { ContentIdea } from '@/types/content'
 
 export default function Pipeline() {
-  const { grouped, loading, moveStage, remove } = usePipeline()
+  const { grouped, loading, moveStage, scheduleIdea, remove } = usePipeline()
   const { update } = useIdeas()
   const { active: activeExperiment } = useExperiments()
   const [selectedIdea, setSelectedIdea] = useState<ContentIdea | null>(null)
+  const [scheduleTarget, setScheduleTarget] = useState<ContentIdea | null>(null)
 
   if (loading) return <p className="text-gray-600 text-sm">Loading...</p>
 
@@ -35,6 +37,7 @@ export default function Pipeline() {
                     onMove={moveStage}
                     onDelete={remove}
                     onOpen={setSelectedIdea}
+                    onScheduleRequest={setScheduleTarget}
                   />
                 ))}
                 {cards.length === 0 && (
@@ -53,6 +56,13 @@ export default function Pipeline() {
           onClose={() => setSelectedIdea(null)}
           onSave={update}
           activeExperiment={activeExperiment}
+        />
+      )}
+      {scheduleTarget && (
+        <ScheduleIdeaModal
+          idea={scheduleTarget}
+          onClose={() => setScheduleTarget(null)}
+          onSchedule={scheduleIdea}
         />
       )}
     </div>
