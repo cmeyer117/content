@@ -334,3 +334,5 @@
   Confirm the changes remain inside the `content_ideas` model/Provider UI path; no Analytics route, `content_post_performance` schema, posting API, or separate planner/table changed. Preserve and report unrelated worktree changes.
 
 - [ ] **Step 5: Hand off without pushing.** Record the three local commit SHAs, migration name/read-only schema result, automated command results, read-only UI observations, and whether Carl authorized a safe write-path test. Do not run `git push`.
+
+> **Codex layered review (2026-08-25):** `src/lib/publishQueue.ts`'s `validPublishAt` uses `new Date(value)` + `isNaN`, which does not reject a calendar-invalid-but-parseable ISO string (e.g. `2026-02-30T...` silently normalizes to March 2 instead of failing). Verified as real but not reachable through this app's own write path: `publish_at` is only ever written by `publishInputToIso`, which round-trip-validates through the Eastern-time correction loop and cannot itself produce a calendar-invalid instant. Would only matter if a row were hand-edited outside the app (e.g. directly in Supabase). Not fixed — no live call path triggers it, and no other file:line issues were found.
