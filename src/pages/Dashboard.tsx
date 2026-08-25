@@ -5,6 +5,7 @@ import BarRow from '@/components/BarRow'
 import SpotlightCard from '@/components/SpotlightCard'
 import EmptyState from '@/components/EmptyState'
 import PostingStreakGrid from '@/components/PostingStreakGrid'
+import PublishQueueSummary from '@/components/PublishQueueSummary'
 
 export default function Dashboard() {
   const { ideas, loading } = useIdeas()
@@ -33,6 +34,8 @@ export default function Dashboard() {
   return (
     <div className="flex flex-col gap-8">
       <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+
+      <PublishQueueSummary ideas={ideas} />
 
       {/* Pipeline summary */}
       <section>

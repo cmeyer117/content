@@ -7,6 +7,7 @@ const nav = [
   { to: '/dashboard', label: 'Dashboard' },
   { to: '/ideas', label: 'Ideas' },
   { to: '/pipeline', label: 'Pipeline' },
+  { to: '/queue', label: 'Queue' },
   { to: '/analytics', label: 'Analytics' },
   { to: '/intel', label: 'Intel' },
 ]
