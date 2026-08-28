@@ -10,7 +10,22 @@ import type { ContentIdea } from '@/types/content'
 const dayFormatter = new Intl.DateTimeFormat('en-US', { timeZone: CONTENT_TIME_ZONE, weekday: 'short', month: 'short', day: 'numeric' })
 const timeFormatter = new Intl.DateTimeFormat('en-US', { timeZone: CONTENT_TIME_ZONE, hour: 'numeric', minute: '2-digit' })
 
-function QueueRow({ item, onEdit }: { item: PublishQueueItem; onEdit: (idea: ContentIdea) => void }) {
+function QueueRow({ item, onEdit, onMarkPosted }: { item: PublishQueueItem; onEdit: (idea: ContentIdea) => void; onMarkPosted: (id: string) => Promise<void> }) {
+  const [posting, setPosting] = useState(false)
+  const [failed, setFailed] = useState(false)
+
+  const handleMarkPosted = async () => {
+    setPosting(true)
+    setFailed(false)
+    try {
+      await onMarkPosted(item.idea.id)
+    } catch {
+      setFailed(true)
+    } finally {
+      setPosting(false)
+    }
+  }
+
   return (
     <div className="bg-card border border-border rounded-lg p-3 flex items-center justify-between gap-3">
       <div className="min-w-0 flex items-center gap-2">
@@ -24,6 +39,10 @@ function QueueRow({ item, onEdit }: { item: PublishQueueItem; onEdit: (idea: Con
             {dayFormatter.format(item.publishAt)}, {timeFormatter.format(item.publishAt)}
           </span>
         )}
+        {failed && <span className="text-xs text-red-700">Failed, retry</span>}
+        <button onClick={handleMarkPosted} disabled={posting} className="text-xs text-green-700 hover:underline disabled:opacity-40">
+          {posting ? 'Marking...' : 'Mark Posted'}
+        </button>
         <button onClick={() => onEdit(item.idea)} className="text-xs text-accent hover:underline">
           Edit schedule
         </button>
@@ -106,7 +125,7 @@ function PlanThisWeek({ ideas, onSchedule }: { ideas: ContentIdea[]; onSchedule:
 
 export default function PublishQueue() {
   const { ideas, loading } = useIdeas()
-  const { scheduleIdea } = usePipeline()
+  const { scheduleIdea, markPosted } = usePipeline()
   const [scheduleTarget, setScheduleTarget] = useState<ContentIdea | null>(null)
 
   if (loading) return <p className="text-gray-600 text-sm">Loading...</p>
@@ -133,7 +152,7 @@ export default function PublishQueue() {
           <div>
             <p className="text-xs font-bold text-red-600 uppercase tracking-widest mb-2">Overdue</p>
             <div className="flex flex-col gap-2">
-              {queue.overdue.map(item => <QueueRow key={item.idea.id} item={item} onEdit={setScheduleTarget} />)}
+              {queue.overdue.map(item => <QueueRow key={item.idea.id} item={item} onEdit={setScheduleTarget} onMarkPosted={markPosted} />)}
             </div>
           </div>
         )}
@@ -141,7 +160,7 @@ export default function PublishQueue() {
           <div>
             <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Ready Today</p>
             <div className="flex flex-col gap-2">
-              {queue.today.map(item => <QueueRow key={item.idea.id} item={item} onEdit={setScheduleTarget} />)}
+              {queue.today.map(item => <QueueRow key={item.idea.id} item={item} onEdit={setScheduleTarget} onMarkPosted={markPosted} />)}
             </div>
           </div>
         )}
@@ -149,7 +168,7 @@ export default function PublishQueue() {
           <div>
             <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Needs a Publish Time</p>
             <div className="flex flex-col gap-2">
-              {queue.needsTime.map(item => <QueueRow key={item.idea.id} item={item} onEdit={setScheduleTarget} />)}
+              {queue.needsTime.map(item => <QueueRow key={item.idea.id} item={item} onEdit={setScheduleTarget} onMarkPosted={markPosted} />)}
             </div>
           </div>
         )}
@@ -178,7 +197,7 @@ export default function PublishQueue() {
         <section>
           <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Later</p>
           <div className="flex flex-col gap-2">
-            {laterUpcoming.map(item => <QueueRow key={item.idea.id} item={item} onEdit={setScheduleTarget} />)}
+            {laterUpcoming.map(item => <QueueRow key={item.idea.id} item={item} onEdit={setScheduleTarget} onMarkPosted={markPosted} />)}
           </div>
         </section>
       )}

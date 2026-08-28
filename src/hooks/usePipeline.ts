@@ -2,10 +2,11 @@ import { useMemo } from 'react'
 import { useIdeas } from './useIdeas'
 import { PIPELINE_STAGES } from '@/lib/constants'
 import { publishInputToIso } from '@/lib/publishQueue'
+import { platformsToMark } from '@/lib/markPosted'
 import type { PipelineStatus, ContentIdea } from '@/types/content'
 
 export function usePipeline() {
-  const { ideas, loading, error, update, remove } = useIdeas()
+  const { ideas, loading, error, update, remove, savePerformance } = useIdeas()
 
   const grouped = useMemo(() => {
     const map = new Map<PipelineStatus, ContentIdea[]>()
@@ -52,5 +53,20 @@ export function usePipeline() {
     return update(id, patch)
   }
 
-  return { grouped, loading, error, moveStage, scheduleIdea, remove }
+  // One-click "I posted this" -- closes the loop three models independently
+  // flagged as the portfolio's one completely broken feedback path. Deliberately
+  // asks for nothing (no URL/metrics prompt): a stamped posted_at per platform
+  // is enough to move the row into Analytics' existing metrics-entry list
+  // (filters on status POSTED/TRACKED), where the full performance review
+  // already happens later, whenever there's something real to enter.
+  const markPosted = (id: string) => {
+    const idea = ideas.find(i => i.id === id)
+    if (!idea) return Promise.resolve()
+    const postedAt = new Date().toISOString()
+    return Promise.all(platformsToMark(idea.platform).map(platform =>
+      savePerformance(id, platform, { posted_at: postedAt })
+    )).then(() => update(id, { status: 'POSTED' }))
+  }
+
+  return { grouped, loading, error, moveStage, scheduleIdea, markPosted, remove }
 }
