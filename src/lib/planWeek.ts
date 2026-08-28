@@ -14,6 +14,10 @@ const DEFAULT_HOUR = '14:00'
 // number of open days come back in `unplaced`, not silently dropped.
 export function planWeek(allIdeas: ContentIdea[], ideaIds: string[], now = new Date()): PlanWeekResult {
   const queue = buildPublishQueue(allIdeas, now)
+  // Deliberately excludes queue.overdue: a post whose scheduled time already
+  // passed today needs its own separate attention (reschedule or mark
+  // posted) regardless of this batch action -- it shouldn't block a fresh
+  // slot later the same day.
   const occupiedDays = new Set(
     [...queue.today, ...queue.upcoming]
       .map(item => item.publishAt)
