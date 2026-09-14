@@ -1,0 +1,5 @@
+# CLAUDE.md
+
+## Shared checkout — concurrent-session risk
+
+`C:\Users\gregm\content` is a native clone, not a per-session worktree — Drive-side worktree sessions fall back here for Node/npm/git execution, and multiple concurrent sessions can and do write to it at once (confirmed collision 2026-08-19: another session stashed this session's uncommitted work and checked out its own branch mid-edit; near-miss 2026-08-20 on the same "Ready Check" feature building twice in parallel). Before starting work: `git log -3 --oneline` + `git status` + `git stash list`. Before every commit: `git diff --cached --stat` (not just `git status --short`) to confirm exactly what's staged — never a bare `git add .`/`-A`. Before every push: `git log --oneline -3 origin/master..HEAD`. Treat any surprise in any of these as stop-and-inspect, not something to push through. Full incident history: `feedback-check-shared-clone-before-building.md` and `project_content_manager_concurrent_sessions.md` in Claude's global memory.
