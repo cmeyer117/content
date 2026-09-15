@@ -11,7 +11,7 @@ import type { ContentIdea } from '@/types/content'
 // Mocking useIdeas directly (not Supabase) tests usePipeline's own branching
 // logic without coupling to the Supabase call chain shape.
 const updateMock = vi.fn(() => Promise.resolve())
-const savePerformanceMock = vi.fn(() => Promise.resolve())
+const savePerformanceMock = vi.fn((_id: string, _platform: string, _data: unknown) => Promise.resolve())
 let ideas: ContentIdea[] = []
 
 vi.mock('@/hooks/useIdeas', () => ({
