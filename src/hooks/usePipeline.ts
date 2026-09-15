@@ -25,6 +25,12 @@ export function usePipeline() {
   // Only sets the timestamp the first time a card reaches that stage --
   // moving it there again (e.g. after a status correction) won't overwrite
   // an already-recorded real post/schedule time.
+  // Fixed 2026-09-15 (Fleet Ops audit, Critical): a move to POSTED must
+  // create a content_post_performance row per platform, same as the
+  // one-click markPosted() path below -- otherwise the nightly performance
+  // scraper (which only reads that child table) can never discover the post.
+  // Guarded on !idea.posted_at, same as the timestamp guard just below it, so
+  // re-moving an already-posted card never creates a duplicate row.
   const moveStage = (id: string, status: PipelineStatus) => {
     const idea = ideas.find(i => i.id === id)
     const patch: Partial<ContentIdea> = { status }
@@ -32,7 +38,11 @@ export function usePipeline() {
       patch.scheduled_at = new Date().toISOString()
     }
     if (status === 'POSTED' && idea && !idea.posted_at) {
-      patch.posted_at = new Date().toISOString()
+      const postedAt = new Date().toISOString()
+      patch.posted_at = postedAt
+      return Promise.all(platformsToMark(idea.platform).map(platform =>
+        savePerformance(id, platform, { posted_at: postedAt })
+      )).then(() => update(id, patch))
     }
     return update(id, patch)
   }
@@ -59,14 +69,12 @@ export function usePipeline() {
   // is enough to move the row into Analytics' existing metrics-entry list
   // (filters on status POSTED/TRACKED), where the full performance review
   // already happens later, whenever there's something real to enter.
-  const markPosted = (id: string) => {
-    const idea = ideas.find(i => i.id === id)
-    if (!idea) return Promise.resolve()
-    const postedAt = new Date().toISOString()
-    return Promise.all(platformsToMark(idea.platform).map(platform =>
-      savePerformance(id, platform, { posted_at: postedAt })
-    )).then(() => update(id, { status: 'POSTED' }))
-  }
+  //
+  // 2026-09-15: this used to duplicate moveStage(id, 'POSTED')'s own logic
+  // (the two had drifted apart, which is exactly how moveStage's copy went
+  // stale and lost the savePerformance call). Now a thin alias -- one write
+  // path for every route to POSTED, not two to keep in sync.
+  const markPosted = (id: string) => moveStage(id, 'POSTED')
 
   return { grouped, loading, error, moveStage, scheduleIdea, markPosted, remove }
 }
