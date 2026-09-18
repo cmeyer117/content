@@ -30,8 +30,12 @@ export function IdeasProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  // `background` skips the loading flag on realtime-triggered refetches --
+  // pages gate their whole content area (including any open edit modal)
+  // behind `loading`, so flipping it on a background refresh was unmounting
+  // an in-progress edit every time an unrelated realtime event fired.
+  const load = useCallback(async (background = false) => {
+    if (!background) setLoading(true)
     const [ideasRes, perfRes] = await Promise.all([
       supabase.from('content_ideas').select('*').order('created_at', { ascending: false }),
       supabase.from('content_post_performance').select('*'),
@@ -48,10 +52,10 @@ export function IdeasProvider({ children }: { children: ReactNode }) {
     const channel = supabase
       .channel('content_ideas-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'content_ideas' }, () => {
-        void load()
+        void load(true)
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'content_post_performance' }, () => {
-        void load()
+        void load(true)
       })
       .subscribe()
     return () => { void supabase.removeChannel(channel) }
