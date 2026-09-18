@@ -29,7 +29,10 @@ export default function IdeaCard({ idea, onMove, onDelete, onOpen, onScheduleReq
       >
         <p className="text-sm font-medium text-gray-900 leading-snug">{idea.title}</p>
         <button
-          onClick={e => { e.stopPropagation(); onDelete(idea.id) }}
+          onClick={e => {
+            e.stopPropagation()
+            if (window.confirm(`Delete "${idea.title}"? This can't be undone.`)) onDelete(idea.id)
+          }}
           className="text-gray-600 hover:text-red-400 text-xs shrink-0"
         >
           ✕

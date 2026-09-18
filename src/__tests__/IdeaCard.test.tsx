@@ -47,15 +47,27 @@ describe('IdeaCard', () => {
     expect(onOpen).toHaveBeenCalledWith(idea)
   })
 
-  it('does not call onOpen when delete is clicked', () => {
+  it('confirms before deleting and does not call onOpen', () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
     const onOpen = vi.fn()
     const onDelete = vi.fn()
     render(
       <IdeaCard idea={idea} onMove={() => {}} onDelete={onDelete} onOpen={onOpen} onScheduleRequest={() => {}} />
     )
     fireEvent.click(screen.getByText('✕'))
+    expect(window.confirm).toHaveBeenCalled()
     expect(onDelete).toHaveBeenCalledWith('idea-1')
     expect(onOpen).not.toHaveBeenCalled()
+  })
+
+  it('does not delete when the confirmation is declined', () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(false)
+    const onDelete = vi.fn()
+    render(
+      <IdeaCard idea={idea} onMove={() => {}} onDelete={onDelete} onOpen={() => {}} onScheduleRequest={() => {}} />
+    )
+    fireEvent.click(screen.getByText('✕'))
+    expect(onDelete).not.toHaveBeenCalled()
   })
 
   it('shows an idea score badge when idea_score is set', () => {
