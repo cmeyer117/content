@@ -5,6 +5,7 @@ import { useExperiments } from '@/hooks/useExperiments'
 import IdeaCard from '@/components/IdeaCard'
 import IdeaDetailModal from '@/components/IdeaDetailModal'
 import ScheduleIdeaModal from '@/components/ScheduleIdeaModal'
+import NextPostBrief from '@/components/NextPostBrief'
 import { PILLARS, PLATFORMS } from '@/lib/constants'
 import type { Pillar, Platform, NewContentIdea, ContentIdea } from '@/types/content'
 
@@ -67,6 +68,8 @@ export default function Ideas() {
   return (
     <div className="max-w-3xl mx-auto flex flex-col gap-8">
       <h1 className="text-2xl font-bold text-gray-900">Ideas</h1>
+
+      <NextPostBrief ideas={ideas} />
 
       {/* Capture form */}
       <form onSubmit={handleSubmit} className="bg-card border border-border rounded-xl p-5 flex flex-col gap-4">
