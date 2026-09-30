@@ -5,6 +5,7 @@
 // workflow only checked outer HTTP status, never sent/total).
 import webpush from 'web-push';
 import { hasPostedToday, BEST_WINDOW_ET } from './posting-cadence-logic.js';
+import { isAuthorizedCron } from './_cron-auth.js';
 
 const SUPABASE_URL = 'https://vikpcejlyxieguorwysf.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -88,8 +89,7 @@ export default async function handler(req, res) {
     res.status(405).json({ error: 'Method not allowed' });
     return;
   }
-  const secret = req.headers['authorization']?.replace('Bearer ', '');
-  if (secret !== process.env.CRON_SECRET) {
+  if (!isAuthorizedCron(req.headers['authorization'])) {
     res.status(401).json({ error: 'Unauthorized' });
     return;
   }

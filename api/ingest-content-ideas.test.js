@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { handleIngestContentIdeasRequest } from './ingest-content-ideas.js';
+import handler, { handleIngestContentIdeasRequest } from './ingest-content-ideas.js';
 
 describe('handleIngestContentIdeasRequest', () => {
   beforeEach(() => {
@@ -41,5 +41,45 @@ describe('handleIngestContentIdeasRequest', () => {
   it('throws when Supabase rejects the insert', async () => {
     global.fetch.mockResolvedValue({ ok: false, status: 500, text: async () => 'boom' });
     await expect(handleIngestContentIdeasRequest([{ title: 'a' }])).rejects.toThrow('Supabase insert failed');
+  });
+});
+
+describe('ingest handler auth (fails closed)', () => {
+  const makeRes = () => {
+    const res = { code: null, body: null };
+    res.status = (c) => { res.code = c; return res; };
+    res.json = (b) => { res.body = b; return res; };
+    return res;
+  };
+  const call = async (headers) => {
+    const res = makeRes();
+    await handler({ method: 'POST', headers, body: { ideas: [{ title: 'x' }] } }, res);
+    return res;
+  };
+
+  it('401s with no Authorization header when CRON_SECRET is unset (the preview-deployment hole), and never touches Supabase', async () => {
+    const prev = process.env.CRON_SECRET;
+    delete process.env.CRON_SECRET;
+    global.fetch = vi.fn();
+    try {
+      const res = await call({});
+      expect(res.code).toBe(401);
+      expect(global.fetch).not.toHaveBeenCalled();
+    } finally {
+      if (prev !== undefined) process.env.CRON_SECRET = prev;
+    }
+  });
+
+  it('401s on a wrong secret and accepts the right one', async () => {
+    const prev = process.env.CRON_SECRET;
+    process.env.CRON_SECRET = 'right';
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => [{ title: 'x' }] });
+    try {
+      expect((await call({ authorization: 'Bearer wrong' })).code).toBe(401);
+      expect(global.fetch).not.toHaveBeenCalled();
+      expect((await call({ authorization: 'Bearer right' })).code).toBe(200);
+    } finally {
+      if (prev === undefined) delete process.env.CRON_SECRET; else process.env.CRON_SECRET = prev;
+    }
   });
 });
