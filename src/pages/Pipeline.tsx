@@ -10,7 +10,7 @@ import { useExperiments } from '@/hooks/useExperiments'
 import type { ContentIdea } from '@/types/content'
 
 export default function Pipeline() {
-  const { grouped, loading, error, moveStage, scheduleIdea, markPosted, remove } = usePipeline()
+  const { grouped, loading, error, refresh, moveStage, scheduleIdea, markPosted, remove } = usePipeline()
   const { update } = useIdeas()
   const { active: activeExperiment } = useExperiments()
   const [selectedIdea, setSelectedIdea] = useState<ContentIdea | null>(null)
@@ -36,7 +36,7 @@ export default function Pipeline() {
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold text-gray-900">Pipeline</h1>
-      {error && <p role="alert" className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800">Could not load ideas: {error}</p>}
+      {error && <p role="alert" className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800">Could not load ideas: {error} <button className="ml-2 underline" onClick={() => void refresh()}>Retry</button></p>}
       <div className="flex gap-4 overflow-x-auto pb-4">
         {PIPELINE_STAGES.map(stage => {
           const cards = grouped.get(stage) ?? []

@@ -6,7 +6,7 @@ import { platformsToMark } from '@/lib/markPosted'
 import type { PipelineStatus, ContentIdea, ContentIdeaWithPerformance } from '@/types/content'
 
 export function usePipeline() {
-  const { ideas, loading, error, update, remove, savePerformance } = useIdeas()
+  const { ideas, loading, error, refresh, update, remove, savePerformance } = useIdeas()
 
   const grouped = useMemo(() => {
     const map = new Map<PipelineStatus, ContentIdeaWithPerformance[]>()
@@ -76,5 +76,5 @@ export function usePipeline() {
   // path for every route to POSTED, not two to keep in sync.
   const markPosted = (id: string) => moveStage(id, 'POSTED')
 
-  return { grouped, loading, error, moveStage, scheduleIdea, markPosted, remove }
+  return { grouped, loading, error, refresh, moveStage, scheduleIdea, markPosted, remove }
 }

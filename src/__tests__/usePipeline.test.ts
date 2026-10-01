@@ -19,6 +19,7 @@ vi.mock('@/hooks/useIdeas', () => ({
     ideas,
     loading: false,
     error: null,
+    refresh: vi.fn(),
     update: updateMock,
     remove: vi.fn(),
     savePerformance: savePerformanceMock,
