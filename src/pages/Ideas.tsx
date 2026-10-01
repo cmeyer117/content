@@ -146,7 +146,7 @@ export default function Ideas() {
               onScheduleRequest={setScheduleTarget}
             />
           ))}
-          {filtered.length === 0 && (
+          {filtered.length === 0 && !error && (
             <p className="text-gray-600 text-sm">No ideas yet. Add one above.</p>
           )}
         </div>

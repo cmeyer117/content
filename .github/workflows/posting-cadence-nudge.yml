@@ -13,11 +13,12 @@ jobs:
     steps:
       - name: Send posting cadence nudge
         run: |
-          response=$(curl -s -w "\n%{http_code}" -X POST \
+          body_file=$(mktemp)
+          trap 'rm -f "$body_file"' EXIT
+          code=$(curl -sS --retry 2 --retry-delay 3 --connect-timeout 10 --max-time 30 -o "$body_file" -w "%{http_code}" -X POST \
             https://content-nine-chi.vercel.app/api/send-posting-cadence-nudge \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}")
-          code=$(echo "$response" | tail -n1)
-          body=$(echo "$response" | sed '$d')
+          body=$(cat "$body_file")
           echo "Response code: $code"
           echo "Response body: $body"
           if [ "$code" != "200" ]; then
