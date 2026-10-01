@@ -64,7 +64,7 @@ export default function PushSubscribeButton() {
       localStorage.setItem('content_push_subscribed_v2', '1')
       setLabel('Notifications enabled')
       setVisible(false)
-    } catch (e) {
+    } catch {
       setLabel('Enable Notifications')
       setBusy(false)
     }
