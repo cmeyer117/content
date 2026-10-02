@@ -3,16 +3,19 @@ import PillarBadge from './PillarBadge'
 import StatusBadge from './StatusBadge'
 import { PIPELINE_STAGES, SUGGESTED_DAYS } from '@/lib/constants'
 import { isReadyForDraft } from '@/lib/hookGate'
+import { inquiriesChipLabel } from '@/lib/attribution'
 
 type Props = {
   idea: ContentIdea
+  // coaching_inquiries attributed to this idea; null/undefined = unavailable.
+  inquiryCount?: number | null
   onMove: (id: string, status: PipelineStatus) => void
   onDelete: (id: string) => void
   onOpen: (idea: ContentIdea) => void
   onScheduleRequest: (idea: ContentIdea) => void
 }
 
-export default function IdeaCard({ idea, onMove, onDelete, onOpen, onScheduleRequest }: Props) {
+export default function IdeaCard({ idea, inquiryCount, onMove, onDelete, onOpen, onScheduleRequest }: Props) {
   const currentIdx = PIPELINE_STAGES.indexOf(idea.status)
   const nextStage = PIPELINE_STAGES[currentIdx + 1] ?? null
   // Gate the transition into READY, not IDEA -> DRAFT -- a draft may still
@@ -56,6 +59,9 @@ export default function IdeaCard({ idea, onMove, onDelete, onOpen, onScheduleReq
         )}
         {idea.source_intel_insight_id && (
           <span className="text-xs text-gray-600" title="Originated from a creator intel insight">🧠 from intel</span>
+        )}
+        {(idea.status === 'POSTED' || idea.status === 'TRACKED') && (
+          <span className="text-xs text-gray-600" title="Coaching inquiries attributed to this post">{inquiriesChipLabel(inquiryCount)}</span>
         )}
       </div>
       {nextStage && (

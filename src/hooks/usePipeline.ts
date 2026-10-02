@@ -3,13 +3,13 @@ import { useIdeas } from './useIdeas'
 import { PIPELINE_STAGES } from '@/lib/constants'
 import { publishInputToIso } from '@/lib/publishQueue'
 import { platformsToMark } from '@/lib/markPosted'
-import type { PipelineStatus, ContentIdea } from '@/types/content'
+import type { PipelineStatus, ContentIdea, ContentIdeaWithPerformance } from '@/types/content'
 
 export function usePipeline() {
   const { ideas, loading, error, update, remove, savePerformance } = useIdeas()
 
   const grouped = useMemo(() => {
-    const map = new Map<PipelineStatus, ContentIdea[]>()
+    const map = new Map<PipelineStatus, ContentIdeaWithPerformance[]>()
     for (const stage of PIPELINE_STAGES) map.set(stage, [])
     for (const idea of ideas) {
       map.get(idea.status)?.push(idea)

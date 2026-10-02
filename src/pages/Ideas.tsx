@@ -138,6 +138,7 @@ export default function Ideas() {
             <IdeaCard
               key={idea.id}
               idea={idea}
+              inquiryCount={idea.inquiry_count}
               onMove={moveStage}
               onDelete={(id) => void remove(id)}
               onOpen={setSelectedIdea}
