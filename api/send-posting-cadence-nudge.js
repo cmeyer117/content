@@ -4,7 +4,7 @@
 // had to retrofit this same night after discovering the GH Actions
 // workflow only checked outer HTTP status, never sent/total).
 import webpush from 'web-push';
-import { hasPostedToday, BEST_WINDOW_ET } from './posting-cadence-logic.js';
+import { hasPostedToday, buildNudgeMessage } from './posting-cadence-logic.js';
 import { isAuthorizedCron } from './_cron-auth.js';
 
 const SUPABASE_URL = 'https://vikpcejlyxieguorwysf.supabase.co';
@@ -24,14 +24,15 @@ async function fetchRecentContentIdeas() {
   return r.json();
 }
 
-async function fetchBankedIdeaCount() {
+// READY = approved and shootable. Fetch the rows (not just a count) so the
+// pure logic can name the top-scored one; the READY column stays small.
+async function fetchReadyIdeas() {
   const r = await fetch(
-    `${SUPABASE_URL}/rest/v1/content_ideas?status=eq.IDEA&select=id`,
-    { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY, Prefer: 'count=exact' } }
+    `${SUPABASE_URL}/rest/v1/content_ideas?status=eq.READY&select=id,title,predicted_score`,
+    { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY } }
   );
-  const range = r.headers.get('content-range'); // e.g. "0-19/48"
-  const total = range ? Number(range.split('/')[1]) : 0;
-  return Number.isNaN(total) ? 0 : total;
+  const rows = await r.json();
+  return Array.isArray(rows) ? rows : [];
 }
 
 async function fetchSubscriptions() {
@@ -61,10 +62,12 @@ export async function handleSendPostingCadenceNudgeRequest() {
     return { status: 200, body: { message: 'No subscriptions, no push sent' } };
   }
 
-  const banked = await fetchBankedIdeaCount();
+  const readyRows = await fetchReadyIdeas();
+  const { body, url } = buildNudgeMessage(readyRows);
   const payload = JSON.stringify({
     title: 'Content Manager',
-    body: `No content posted today — post now to catch ${BEST_WINDOW_ET}. ${banked} ideas banked, ship one.`,
+    body,
+    ...(url ? { data: { url } } : {}),
   });
 
   let sent = 0;

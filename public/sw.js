@@ -11,10 +11,12 @@ self.addEventListener('activate', e => {
 self.addEventListener('push', e => {
   let data = { title: 'Content Manager', body: 'New notification' };
   try { if (e.data) data = e.data.json(); } catch (_) {}
-  e.waitUntil(self.registration.showNotification(data.title, { body: data.body, icon: '/icons/icon-192.png' }));
+  e.waitUntil(self.registration.showNotification(data.title, { body: data.body, icon: '/icons/icon-192.png', data: data.data }));
 });
 
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  e.waitUntil(clients.openWindow('/'));
+  // Payloads may carry data.url (e.g. the posting nudge deep-links to /pipeline); default to home.
+  const url = (e.notification.data && e.notification.data.url) || '/';
+  e.waitUntil(clients.openWindow(url));
 });
