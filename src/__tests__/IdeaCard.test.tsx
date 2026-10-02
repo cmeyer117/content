@@ -137,6 +137,37 @@ describe('IdeaCard', () => {
     expect(moveButton.disabled).toBe(false)
   })
 
+  describe('inquiries chip', () => {
+    it('shows the inquiry count on a POSTED idea', () => {
+      const posted = { ...idea, status: 'POSTED' as const }
+      render(<IdeaCard idea={posted} inquiryCount={3} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} onScheduleRequest={() => {}} />)
+      expect(screen.getByText('Inquiries: 3')).toBeTruthy()
+    })
+
+    it('shows the inquiry count on a TRACKED idea', () => {
+      const tracked = { ...idea, status: 'TRACKED' as const }
+      render(<IdeaCard idea={tracked} inquiryCount={1} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} onScheduleRequest={() => {}} />)
+      expect(screen.getByText('Inquiries: 1')).toBeTruthy()
+    })
+
+    it('shows "none yet" rather than blank when the count is unavailable', () => {
+      const posted = { ...idea, status: 'POSTED' as const }
+      render(<IdeaCard idea={posted} inquiryCount={null} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} onScheduleRequest={() => {}} />)
+      expect(screen.getByText('Inquiries: none yet')).toBeTruthy()
+    })
+
+    it('shows "none yet" when the count is zero', () => {
+      const posted = { ...idea, status: 'POSTED' as const }
+      render(<IdeaCard idea={posted} inquiryCount={0} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} onScheduleRequest={() => {}} />)
+      expect(screen.getByText('Inquiries: none yet')).toBeTruthy()
+    })
+
+    it('shows no chip on ideas that have not been posted', () => {
+      render(<IdeaCard idea={idea} inquiryCount={5} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} onScheduleRequest={() => {}} />)
+      expect(screen.queryByText(/Inquiries/)).toBeNull()
+    })
+  })
+
   it('invokes onScheduleRequest instead of onMove when a READY card is moved to SCHEDULED', () => {
     const onMove = vi.fn()
     const onScheduleRequest = vi.fn()

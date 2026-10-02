@@ -34,6 +34,7 @@ export default function Pipeline() {
                   <IdeaCard
                     key={idea.id}
                     idea={idea}
+                    inquiryCount={idea.inquiry_count}
                     onMove={moveStage}
                     onDelete={remove}
                     onOpen={setSelectedIdea}

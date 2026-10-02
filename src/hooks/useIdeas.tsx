@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
+import { countInquiriesByIdea } from '@/lib/attribution'
 import type { ContentIdea, NewContentIdea, ContentIdeaWithPerformance, PostPerformance, NewPostPerformance } from '@/types/content'
 
 interface IdeasContextValue {
@@ -15,14 +16,36 @@ interface IdeasContextValue {
 
 const IdeasContext = createContext<IdeasContextValue | null>(null)
 
-function joinPerformances(ideas: ContentIdea[], performances: PostPerformance[]): ContentIdeaWithPerformance[] {
+function joinPerformances(
+  ideas: ContentIdea[],
+  performances: PostPerformance[],
+  inquiryCounts: Record<string, number> | null,
+): ContentIdeaWithPerformance[] {
   const byIdea = new Map<string, PostPerformance[]>()
   for (const p of performances) {
     const list = byIdea.get(p.content_idea_id) ?? []
     list.push(p)
     byIdea.set(p.content_idea_id, list)
   }
-  return ideas.map(i => ({ ...i, performances: byIdea.get(i.id) ?? [] }))
+  return ideas.map(i => ({
+    ...i,
+    performances: byIdea.get(i.id) ?? [],
+    inquiry_count: inquiryCounts ? (inquiryCounts[i.id] ?? 0) : null,
+  }))
+}
+
+// Post-to-inquiry attribution read. coaching_inquiries is written by
+// coaching-landing, not this app, and the owner read policy on it is
+// unverified -- so any failure (missing table/column, RLS denial, network)
+// resolves to null and the UI shows "none yet" instead of erroring the page.
+async function loadInquiryCounts(): Promise<Record<string, number> | null> {
+  try {
+    const res = await supabase.from('coaching_inquiries').select('content_idea_id')
+    if (res.error) return null
+    return countInquiriesByIdea(res.data)
+  } catch {
+    return null
+  }
 }
 
 export function IdeasProvider({ children }: { children: ReactNode }) {
@@ -36,13 +59,14 @@ export function IdeasProvider({ children }: { children: ReactNode }) {
   // an in-progress edit every time an unrelated realtime event fired.
   const load = useCallback(async (background = false) => {
     if (!background) setLoading(true)
-    const [ideasRes, perfRes] = await Promise.all([
+    const [ideasRes, perfRes, inquiryCounts] = await Promise.all([
       supabase.from('content_ideas').select('*').order('created_at', { ascending: false }),
       supabase.from('content_post_performance').select('*'),
+      loadInquiryCounts(),
     ])
     if (ideasRes.error) setError(ideasRes.error.message)
     else if (perfRes.error) setError(perfRes.error.message)
-    else setIdeas(joinPerformances((ideasRes.data as ContentIdea[]) ?? [], (perfRes.data as PostPerformance[]) ?? []))
+    else setIdeas(joinPerformances((ideasRes.data as ContentIdea[]) ?? [], (perfRes.data as PostPerformance[]) ?? [], inquiryCounts))
     setLoading(false)
   }, [])
 
@@ -68,7 +92,7 @@ export function IdeasProvider({ children }: { children: ReactNode }) {
       .select()
       .single()
     if (error) throw error
-    setIdeas(prev => [{ ...(data as ContentIdea), performances: [] }, ...prev])
+    setIdeas(prev => [{ ...(data as ContentIdea), performances: [], inquiry_count: null }, ...prev])
     return data as ContentIdea
   }
 

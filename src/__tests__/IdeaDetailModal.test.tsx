@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import IdeaDetailModal from '@/components/IdeaDetailModal'
 import type { ContentIdea } from '@/types/content'
 
@@ -194,6 +194,40 @@ describe('IdeaDetailModal', () => {
     fireEvent.click(screen.getByRole('button', { name: /save/i }))
 
     expect(onSave).toHaveBeenCalledWith('idea-1', expect.objectContaining({ experiment_id: null }))
+  })
+
+  describe('Copy coaching link', () => {
+    function stubClipboard(writeText: (text: string) => Promise<void>) {
+      Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
+    }
+
+    it('copies the attributed coaching-landing URL built from the idea', async () => {
+      const writeText = vi.fn().mockResolvedValue(undefined)
+      stubClipboard(writeText)
+      render(<IdeaDetailModal idea={idea} onClose={() => {}} onSave={async () => {}} />)
+
+      fireEvent.click(screen.getByRole('button', { name: /copy coaching link/i }))
+
+      expect(writeText).toHaveBeenCalledWith(
+        'https://coaching-landing-nu.vercel.app/?utm_source=tiktok&utm_campaign=training&content_idea_id=idea-1',
+      )
+      await waitFor(() => expect(screen.getByText(/copied/i)).toBeTruthy())
+    })
+
+    it('does not call onSave when copying (no attributed_link_copied_at stamp exists on this schema)', () => {
+      stubClipboard(vi.fn().mockResolvedValue(undefined))
+      const onSave = vi.fn()
+      render(<IdeaDetailModal idea={idea} onClose={() => {}} onSave={onSave} />)
+      fireEvent.click(screen.getByRole('button', { name: /copy coaching link/i }))
+      expect(onSave).not.toHaveBeenCalled()
+    })
+
+    it('fails soft when the clipboard write rejects', async () => {
+      stubClipboard(vi.fn().mockRejectedValue(new Error('denied')))
+      render(<IdeaDetailModal idea={idea} onClose={() => {}} onSave={async () => {}} />)
+      fireEvent.click(screen.getByRole('button', { name: /copy coaching link/i }))
+      await waitFor(() => expect(screen.getByText(/copy failed/i)).toBeTruthy())
+    })
   })
 
   it('preserves experiment_id for an idea tagged into a different, non-active experiment on an unrelated save', async () => {

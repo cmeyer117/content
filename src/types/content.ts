@@ -73,4 +73,7 @@ export type PostPerformance = {
 
 export type NewPostPerformance = Omit<PostPerformance, 'id' | 'created_at'>
 
-export type ContentIdeaWithPerformance = ContentIdea & { performances: PostPerformance[] }
+// inquiry_count: coaching_inquiries rows attributed to this idea via
+// content_idea_id. null/undefined means the read was unavailable (fail-soft),
+// not zero. Optional so existing fixtures that don't care about it still type.
+export type ContentIdeaWithPerformance = ContentIdea & { performances: PostPerformance[]; inquiry_count?: number | null }

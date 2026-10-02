@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { ContentIdea, Pillar, Platform, ContentClass, Experiment } from '@/types/content'
 import { PILLARS, PLATFORMS } from '@/lib/constants'
+import { buildCoachingLink } from '@/lib/attribution'
 
 type Props = {
   idea: ContentIdea
@@ -35,6 +36,20 @@ export default function IdeaDetailModal({ idea, onClose, onSave, activeExperimen
   const [executionScoreNotes, setExecutionScoreNotes] = useState(idea.execution_score_notes ?? '')
   const [saving, setSaving] = useState(false)
   const [experimentTagged, setExperimentTagged] = useState(idea.experiment_id === activeExperiment?.id && activeExperiment !== null)
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle')
+
+  // Attributed coaching-landing link: the saved pillar/platform, not the
+  // unsaved selects, so the copied link always matches what's in the DB.
+  // No details.attributed_link_copied_at stamp -- content_ideas has no
+  // details column, and this task is no-schema-change.
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(buildCoachingLink(idea))
+      setCopyState('copied')
+    } catch {
+      setCopyState('failed')
+    }
+  }
 
   const handleSave = async () => {
     setSaving(true)
@@ -239,6 +254,18 @@ export default function IdeaDetailModal({ idea, onClose, onSave, activeExperimen
             {idea.predicted_reasoning && <p className="text-xs mt-1">{idea.predicted_reasoning}</p>}
           </div>
         )}
+
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => void handleCopyLink()}
+            className="text-xs text-accent hover:underline text-left"
+          >
+            Copy coaching link
+          </button>
+          {copyState === 'copied' && <span className="text-xs text-gray-500">Copied</span>}
+          {copyState === 'failed' && <span className="text-xs text-red-400">Copy failed</span>}
+        </div>
 
         {activeExperiment && (
           <label className="flex items-center gap-2 text-sm text-gray-900">
