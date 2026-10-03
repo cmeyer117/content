@@ -37,7 +37,7 @@ function joinPerformances(
 // Post-to-inquiry attribution read. coaching_inquiries is written by
 // coaching-landing, not this app, and the owner read policy on it is
 // unverified -- so any failure (missing table/column, RLS denial, network)
-// resolves to null and the UI shows "none yet" instead of erroring the page.
+// resolves to null and the UI shows "unavailable" instead of erroring the page.
 async function loadInquiryCounts(): Promise<Record<string, number> | null> {
   try {
     const res = await supabase.from('coaching_inquiries').select('content_idea_id')

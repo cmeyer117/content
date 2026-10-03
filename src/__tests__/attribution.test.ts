@@ -60,8 +60,8 @@ describe('inquiriesChipLabel', () => {
     expect(inquiriesChipLabel(0)).toBe('Inquiries: none yet')
   })
 
-  it('fails soft to "none yet" when the count is unavailable', () => {
-    expect(inquiriesChipLabel(null)).toBe('Inquiries: none yet')
-    expect(inquiriesChipLabel(undefined)).toBe('Inquiries: none yet')
+  it('says unavailable, not "none yet", when the count is unavailable', () => {
+    expect(inquiriesChipLabel(null)).toBe('Inquiries: unavailable')
+    expect(inquiriesChipLabel(undefined)).toBe('Inquiries: unavailable')
   })
 })

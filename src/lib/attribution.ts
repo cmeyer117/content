@@ -37,5 +37,6 @@ export function countInquiriesByIdea(rows: unknown): Record<string, number> {
 // "none yet", never blank.
 export function inquiriesChipLabel(count: number | null | undefined): string {
   if (typeof count === 'number' && count > 0) return `Inquiries: ${count}`
-  return 'Inquiries: none yet'
+  if (count === 0) return 'Inquiries: none yet'
+  return 'Inquiries: unavailable'
 }

@@ -150,10 +150,10 @@ describe('IdeaCard', () => {
       expect(screen.getByText('Inquiries: 1')).toBeTruthy()
     })
 
-    it('shows "none yet" rather than blank when the count is unavailable', () => {
+    it('shows "unavailable" rather than "none yet" when the count is unavailable', () => {
       const posted = { ...idea, status: 'POSTED' as const }
       render(<IdeaCard idea={posted} inquiryCount={null} onMove={() => {}} onDelete={() => {}} onOpen={() => {}} onScheduleRequest={() => {}} />)
-      expect(screen.getByText('Inquiries: none yet')).toBeTruthy()
+      expect(screen.getByText('Inquiries: unavailable')).toBeTruthy()
     })
 
     it('shows "none yet" when the count is zero', () => {
