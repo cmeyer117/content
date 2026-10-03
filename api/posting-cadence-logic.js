@@ -2,12 +2,6 @@
 // boundary approach fixed tonight in Row's workout-nudge-logic.js and
 // Vessel's journal-gap-logic.js — own local copy, not imported cross-repo.
 
-// ponytail: from Metricool getBestTimeToPostByNetwork, 7-day pull 2026-08-05
-// (both TikTok and IG peak ~10am ET and ~6pm ET, every day) — hardcoded since
-// the pattern is stable and re-querying live would need Metricool creds in
-// this serverless function for no real benefit. Re-check if posting hours drift.
-export const BEST_WINDOW_ET = '10am or 6pm ET';
-
 export function todayEasternKey(date = new Date()) {
   return new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/New_York',
@@ -17,10 +11,9 @@ export function todayEasternKey(date = new Date()) {
   }).format(date);
 }
 
-// Deep link for the nudge. The Pipeline page has no idea-selection URL
-// param yet, so the best we can do is land on the board (READY column
-// is visible there). Switch to an idea-specific link once the app grows one.
-export const PIPELINE_URL = '/pipeline';
+// Deep link for the nudge: the Pipeline page opens the named idea's modal
+// from ?idea=<id> (src/pages/Pipeline.tsx).
+export const pipelineUrl = (id) => `/pipeline?idea=${encodeURIComponent(id)}`;
 
 // The READY idea with the highest predicted_score. A missing/null score
 // ranks below any real score; ties keep input order; empty list -> null.
@@ -40,8 +33,8 @@ export function buildNudgeMessage(readyRows) {
     return { body: 'No content posted today. Nothing approved yet, open the autopilot cards.' };
   }
   return {
-    body: `No content posted today — post now to catch ${BEST_WINDOW_ET}. Top pick: "${top.title}" (${rows.length} ready).`,
-    url: PIPELINE_URL,
+    body: `No content posted today. Top pick: "${top.title}" (${rows.length} ready).`,
+    url: pipelineUrl(top.id),
   };
 }
 

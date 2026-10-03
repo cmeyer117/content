@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { todayEasternKey, hasPostedToday, pickTopReadyIdea, buildNudgeMessage, BEST_WINDOW_ET } from './posting-cadence-logic.js'
+import { todayEasternKey, hasPostedToday, pickTopReadyIdea, buildNudgeMessage } from './posting-cadence-logic.js'
 
 describe('todayEasternKey', () => {
   it('matches the calendar date for a mid-evening Eastern timestamp', () => {
@@ -79,17 +79,17 @@ describe('pickTopReadyIdea', () => {
 })
 
 describe('buildNudgeMessage', () => {
-  it('READY > 0 — names the top post, counts READY, and deep-links to /pipeline', () => {
+  it('READY > 0 — names the top post, counts READY, and deep-links to that idea', () => {
     const rows = [
       { id: 'a', title: 'Low one', predicted_score: 3 },
       { id: 'b', title: 'Ship this one', predicted_score: 9 },
     ]
     const msg = buildNudgeMessage(rows)
-    expect(msg.body).toContain(BEST_WINDOW_ET)
+    expect(msg.body).not.toContain('ET')
     expect(msg.body).toContain('Ship this one')
     expect(msg.body).toContain('2 ready')
     expect(msg.body).not.toContain('banked')
-    expect(msg.url).toBe('/pipeline')
+    expect(msg.url).toBe('/pipeline?idea=b')
   })
 
   it('READY = 0 — says nothing is approved and carries no link', () => {
@@ -118,6 +118,6 @@ describe('buildNudgeMessage', () => {
     const msg = buildNudgeMessage(rows)
     expect(msg.body).toContain('Only unscored')
     expect(msg.body).toContain('1 ready')
-    expect(msg.url).toBe('/pipeline')
+    expect(msg.url).toBe('/pipeline?idea=a')
   })
 })

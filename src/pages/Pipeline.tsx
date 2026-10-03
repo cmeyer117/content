@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { usePipeline } from '@/hooks/usePipeline'
 import { PIPELINE_STAGES } from '@/lib/constants'
 import IdeaCard from '@/components/IdeaCard'
@@ -14,6 +15,18 @@ export default function Pipeline() {
   const { active: activeExperiment } = useExperiments()
   const [selectedIdea, setSelectedIdea] = useState<ContentIdea | null>(null)
   const [scheduleTarget, setScheduleTarget] = useState<ContentIdea | null>(null)
+  const [params, setParams] = useSearchParams()
+  const wantedId = params.get('idea')
+
+  // Posting-nudge deep link: open the named idea once the board has loaded.
+  useEffect(() => {
+    if (!wantedId || loading) return
+    for (const cards of grouped.values()) {
+      const hit = cards.find(i => i.id === wantedId)
+      if (hit) { setSelectedIdea(hit); break }
+    }
+    setParams({}, { replace: true })
+  }, [wantedId, loading, grouped, setParams])
 
   if (loading) return <p className="text-gray-600 text-sm">Loading...</p>
 
