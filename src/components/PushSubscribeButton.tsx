@@ -16,6 +16,7 @@ export default function PushSubscribeButton() {
   const [visible, setVisible] = useState(false)
   const [busy, setBusy] = useState(false)
   const [label, setLabel] = useState('Enable Notifications')
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const canPush = 'serviceWorker' in navigator && 'PushManager' in window
@@ -29,17 +30,32 @@ export default function PushSubscribeButton() {
 
   const handleClick = async () => {
     setBusy(true)
+    setError(null)
     setLabel('Enabling...')
+    // Replacing a subscription means unsubscribing first, so from that point a failure leaves this browser with NO
+    // subscription. `removedOld` lets the failure path stop claiming notifications are on (Codex review 2026-10-04).
+    let removedOld = false
+    const fail = () => {
+      if (removedOld) {
+        localStorage.removeItem('content_push_subscribed_v2')
+        setError('Could not refresh notifications. Tap Enable Notifications to try again.')
+      }
+      setLabel('Enable Notifications')
+      setBusy(false)
+    }
     try {
       const permission = await Notification.requestPermission()
       if (permission !== 'granted') {
-        setLabel('Enable Notifications')
+        setLabel(localStorage.getItem('content_push_subscribed_v2') ? 'Refresh Notifications' : 'Enable Notifications')
         setBusy(false)
         return
       }
       const reg = await navigator.serviceWorker.ready
       const existing = await reg.pushManager.getSubscription()
-      if (existing) await existing.unsubscribe()
+      if (existing) {
+        await existing.unsubscribe()
+        removedOld = true
+      }
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
@@ -57,26 +73,28 @@ export default function PushSubscribeButton() {
         // fetch() only rejects on network failure, not on a non-2xx status
         // (e.g. a 502 from a failed Supabase upsert) — without this check,
         // a server-side failure gets silently treated as success.
-        setLabel('Enable Notifications')
-        setBusy(false)
+        fail()
         return
       }
       localStorage.setItem('content_push_subscribed_v2', '1')
+      setError(null)
       setLabel('Notifications enabled')
       setVisible(false)
     } catch {
-      setLabel('Enable Notifications')
-      setBusy(false)
+      fail()
     }
   }
 
   return (
-    <button
-      onClick={() => void handleClick()}
-      disabled={busy}
-      className="w-full mb-4 px-3 py-2 rounded text-sm bg-card border border-border text-accent disabled:opacity-40"
-    >
-      {label}
-    </button>
+    <div className="mb-4">
+      {error && <p role="alert" className="mb-2 text-xs text-red-700">{error}</p>}
+      <button
+        onClick={() => void handleClick()}
+        disabled={busy}
+        className="w-full px-3 py-2 rounded text-sm bg-card border border-border text-accent disabled:opacity-40"
+      >
+        {label}
+      </button>
+    </div>
   )
 }

@@ -84,4 +84,55 @@ describe('useIdeas', () => {
     deferredResolvers.forEach(resolve => resolve({ data: [], error: null }))
     await waitFor(() => expect(result.current.loading).toBe(false))
   })
+
+  // Codex review (2026-10-04): loads can overlap (initial load vs a Retry click vs a realtime refetch). Only the most
+  // recently STARTED load may touch state, so an older response arriving late can neither show a stale error nor
+  // overwrite newer data.
+  describe('overlapping loads', () => {
+    const pending: Array<(v: unknown) => void> = []
+    const wrapper = ({ children }: { children: React.ReactNode }) => <IdeasProvider>{children}</IdeasProvider>
+    const controlIdeas = () => {
+      pending.length = 0
+      vi.mocked(supabase.from).mockImplementation(((table: string) => table === 'content_ideas'
+        ? { select: () => ({ order: () => new Promise(resolve => { pending.push(resolve) }) }) }
+        : { select: async () => ({ data: [], error: null }) }) as never)
+    }
+
+    it('a stale failure arriving after a newer success does not show an error', async () => {
+      controlIdeas()
+      const { result } = renderHook(() => useIdeas(), { wrapper })
+      await waitFor(() => expect(pending.length).toBe(1))
+      act(() => { void result.current.refresh() })
+      await waitFor(() => expect(pending.length).toBe(2))
+      await act(async () => { pending[1]!({ data: [{ id: 'new' }], error: null }) })
+      await waitFor(() => expect(result.current.ideas.map(i => i.id)).toEqual(['new']))
+      await act(async () => { pending[0]!({ data: null, error: { message: 'old failure' } }) })
+      expect(result.current.error).toBeNull()
+      expect(result.current.ideas.map(i => i.id)).toEqual(['new'])
+    })
+
+    it('a stale success arriving after a newer success does not overwrite the newer data', async () => {
+      controlIdeas()
+      const { result } = renderHook(() => useIdeas(), { wrapper })
+      await waitFor(() => expect(pending.length).toBe(1))
+      act(() => { void result.current.refresh() })
+      await waitFor(() => expect(pending.length).toBe(2))
+      await act(async () => { pending[1]!({ data: [{ id: 'new' }], error: null }) })
+      await waitFor(() => expect(result.current.ideas.map(i => i.id)).toEqual(['new']))
+      await act(async () => { pending[0]!({ data: [{ id: 'old' }], error: null }) })
+      expect(result.current.ideas.map(i => i.id)).toEqual(['new'])
+    })
+
+    it('loading stays true until the newest load finishes, even if an older one settles first', async () => {
+      controlIdeas()
+      const { result } = renderHook(() => useIdeas(), { wrapper })
+      await waitFor(() => expect(pending.length).toBe(1))
+      act(() => { void result.current.refresh() })
+      await waitFor(() => expect(pending.length).toBe(2))
+      await act(async () => { pending[0]!({ data: [], error: null }) })
+      expect(result.current.loading).toBe(true)
+      await act(async () => { pending[1]!({ data: [], error: null }) })
+      expect(result.current.loading).toBe(false)
+    })
+  })
 })

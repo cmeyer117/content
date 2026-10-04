@@ -18,15 +18,16 @@ export default function Pipeline() {
   const [params, setParams] = useSearchParams()
   const wantedId = params.get('idea')
 
-  // Posting-nudge deep link: open the named idea once the board has loaded.
+  // Posting-nudge deep link: open the named idea once the board has loaded. While the load has failed the board is empty,
+  // so the link is kept (not consumed) and works after a successful Retry.
   useEffect(() => {
-    if (!wantedId || loading) return
+    if (!wantedId || loading || error) return
     for (const cards of grouped.values()) {
       const hit = cards.find(i => i.id === wantedId)
       if (hit) { setSelectedIdea(hit); break }
     }
     setParams({}, { replace: true })
-  }, [wantedId, loading, grouped, setParams])
+  }, [wantedId, loading, error, grouped, setParams])
 
   if (loading) return <p className="text-gray-600 text-sm">Loading...</p>
 

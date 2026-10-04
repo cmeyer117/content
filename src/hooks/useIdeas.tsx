@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 import { countInquiriesByIdea } from '@/lib/attribution'
 import type { ContentIdea, NewContentIdea, ContentIdeaWithPerformance, PostPerformance, NewPostPerformance } from '@/types/content'
@@ -57,7 +57,12 @@ export function IdeasProvider({ children }: { children: ReactNode }) {
   // pages gate their whole content area (including any open edit modal)
   // behind `loading`, so flipping it on a background refresh was unmounting
   // an in-progress edit every time an unrelated realtime event fired.
+  // Loads overlap (initial load, a Retry click, realtime refetches). Only the most recently STARTED one may update
+  // state, so a slow older response can neither show a stale error nor overwrite newer data (Codex review 2026-10-04).
+  const latestLoad = useRef(0)
   const load = useCallback(async (background = false) => {
+    const thisLoad = ++latestLoad.current
+    const isLatest = () => thisLoad === latestLoad.current
     if (!background) setLoading(true)
     try {
       // loadInquiryCounts never throws (a failed read resolves to null, shown as "unavailable"), so it is safe inside the same Promise.all.
@@ -68,15 +73,17 @@ export function IdeasProvider({ children }: { children: ReactNode }) {
       ])
       if (ideasRes.error) throw ideasRes.error
       if (perfRes.error) throw perfRes.error
+      if (!isLatest()) return
       setIdeas(joinPerformances((ideasRes.data as ContentIdea[]) ?? [], (perfRes.data as PostPerformance[]) ?? [], inquiryCounts))
       setError(null)
     } catch (err) {
+      if (!isLatest()) return
       const message = typeof err === 'object' && err !== null && 'message' in err
         ? String((err as { message: unknown }).message)
         : String(err)
       setError(message)
     } finally {
-      setLoading(false)
+      if (isLatest()) setLoading(false)
     }
   }, [])
 
