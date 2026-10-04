@@ -1,14 +1,21 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { ContentIdea, Pillar, Platform, ContentClass, Experiment } from '@/types/content'
 import { PILLARS, PLATFORMS } from '@/lib/constants'
 import { buildCoachingLink } from '@/lib/attribution'
+import { packetText, packetMissing, packetStatus, type PacketCopyKind } from '@/lib/publishPacket'
+import { saveDraft, loadDraft, clearDraft, draftDiffersFrom } from '@/lib/ideaDraft'
 
 type Props = {
   idea: ContentIdea
   onClose: () => void
   onSave: (id: string, changes: Partial<ContentIdea>) => Promise<void>
   activeExperiment?: Experiment | null
+  // Marks the idea posted exactly as the Publish Queue does (also creates the per-platform performance rows).
+  onMarkPosted?: (id: string) => Promise<void>
 }
+
+const PACKET_STATUSES = ['READY', 'SCHEDULED', 'POSTED', 'TRACKED']
+const publishedFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
 
 function clampScore(raw: string): number | null {
   if (raw.trim() === '') return null
@@ -17,17 +24,23 @@ function clampScore(raw: string): number | null {
   return Math.min(10, Math.max(1, n))
 }
 
-export default function IdeaDetailModal({ idea, onClose, onSave, activeExperiment = null }: Props) {
-  const [title, setTitle] = useState(idea.title)
-  const [hook, setHook] = useState(idea.hook ?? '')
+export default function IdeaDetailModal({ idea, onClose, onSave, activeExperiment = null, onMarkPosted }: Props) {
+  // Unsaved edits from a previous open (per-device convenience): restore them, with a way to discard.
+  const [initialDraft] = useState(() => {
+    const d = loadDraft(idea.id)
+    return d && draftDiffersFrom(d, idea) ? d : null
+  })
+  const [restored, setRestored] = useState(initialDraft !== null)
+  const [title, setTitle] = useState(initialDraft?.title ?? idea.title)
+  const [hook, setHook] = useState(initialDraft?.hook ?? idea.hook ?? '')
   const [contentClass, setContentClass] = useState<ContentClass | ''>(idea.content_class ?? '')
   const [hookFirst2s, setHookFirst2s] = useState(idea.hook_first_2s ?? '')
   const [viewerPayoff, setViewerPayoff] = useState(idea.viewer_payoff ?? '')
   const [targetLength, setTargetLength] = useState(idea.target_length_seconds?.toString() ?? '')
   const [lengthJustification, setLengthJustification] = useState(idea.length_justification ?? '')
   const [diaryJustification, setDiaryJustification] = useState(idea.diary_justification ?? '')
-  const [body, setBody] = useState(idea.body ?? '')
-  const [notes, setNotes] = useState(idea.notes ?? '')
+  const [body, setBody] = useState(initialDraft?.body ?? idea.body ?? '')
+  const [notes, setNotes] = useState(initialDraft?.notes ?? idea.notes ?? '')
   const [pillar, setPillar] = useState<Pillar>(idea.pillar)
   const [platform, setPlatform] = useState<Platform>(idea.platform)
   const [ideaScore, setIdeaScore] = useState(idea.idea_score?.toString() ?? '')
@@ -37,6 +50,45 @@ export default function IdeaDetailModal({ idea, onClose, onSave, activeExperimen
   const [saving, setSaving] = useState(false)
   const [experimentTagged, setExperimentTagged] = useState(idea.experiment_id === activeExperiment?.id && activeExperiment !== null)
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle')
+  const [saveFailed, setSaveFailed] = useState(false)
+  const [packetCopy, setPacketCopy] = useState<PacketCopyKind | 'failed' | null>(null)
+  const [markState, setMarkState] = useState<'idle' | 'marking' | 'failed' | 'done'>('idle')
+
+  useEffect(() => {
+    const draft = { title, hook, body, notes }
+    if (draftDiffersFrom(draft, idea)) saveDraft(idea.id, draft)
+    else clearDraft(idea.id)
+  }, [title, hook, body, notes, idea])
+
+  const discardDraft = () => {
+    setTitle(idea.title)
+    setHook(idea.hook ?? '')
+    setBody(idea.body ?? '')
+    setNotes(idea.notes ?? '')
+    clearDraft(idea.id)
+    setRestored(false)
+  }
+
+  // The packet is built from the SAVED idea (same rule as the coaching link), so what is copied matches the DB.
+  const handlePacketCopy = async (kind: PacketCopyKind) => {
+    try {
+      await navigator.clipboard.writeText(packetText(idea, kind))
+      setPacketCopy(kind)
+    } catch {
+      setPacketCopy('failed')
+    }
+  }
+
+  const handleMarkPublished = async () => {
+    if (!onMarkPosted) return
+    setMarkState('marking')
+    try {
+      await onMarkPosted(idea.id)
+      setMarkState('done')
+    } catch {
+      setMarkState('failed')
+    }
+  }
 
   // Attributed coaching-landing link: the saved pillar/platform, not the
   // unsaved selects, so the copied link always matches what's in the DB.
@@ -53,6 +105,7 @@ export default function IdeaDetailModal({ idea, onClose, onSave, activeExperimen
 
   const handleSave = async () => {
     setSaving(true)
+    setSaveFailed(false)
     try {
       await onSave(idea.id, {
         title,
@@ -75,7 +128,10 @@ export default function IdeaDetailModal({ idea, onClose, onSave, activeExperimen
           ? (experimentTagged ? activeExperiment.id : (idea.experiment_id === activeExperiment.id ? null : idea.experiment_id))
           : idea.experiment_id,
       })
+      clearDraft(idea.id)
       onClose()
+    } catch {
+      setSaveFailed(true) // the modal stays open with the edits intact (and a local draft)
     } finally {
       setSaving(false)
     }
@@ -100,6 +156,53 @@ export default function IdeaDetailModal({ idea, onClose, onSave, activeExperimen
             ✕
           </button>
         </div>
+
+        {restored && (
+          <p className="text-xs text-gray-600">
+            Restored unsaved edits from last time.{' '}
+            <button type="button" onClick={discardDraft} className="text-accent hover:underline">Discard</button>
+          </p>
+        )}
+
+        {PACKET_STATUSES.includes(idea.status) && (() => {
+          const status = packetStatus(idea as ContentIdea & { inquiry_count?: number | null })
+          const missing = packetMissing(idea)
+          const published = status.stage === 'published' || markState === 'done'
+          const captionDirty = body !== (idea.body ?? '')
+          return (
+            <div className="border border-border rounded-lg p-3 flex flex-col gap-2">
+              <p className="text-xs font-medium text-gray-700">Publish packet</p>
+              <p className="text-xs text-gray-600">
+                {published
+                  ? `Published${status.publishedAt ? ' ' + publishedFormatter.format(new Date(status.publishedAt)) : markState === 'done' ? ' just now' : ''}`
+                  : 'Ready to post'}
+                {status.inquiries ? ` · ${status.inquiries}` : ''}
+                {' · '}{idea.platform}
+              </p>
+              {idea.hook && <p className="text-xs text-gray-700">Hook: {idea.hook}</p>}
+              {missing.includes('caption')
+                ? <p className="text-xs text-red-700">Add a caption before posting.</p>
+                : <p className="text-sm text-gray-900 whitespace-pre-wrap">{(idea.body ?? '').trim()}</p>}
+              {captionDirty && <p className="text-xs text-gray-600">Unsaved caption edits are not in the packet. Save to include them.</p>}
+              {idea.notes && <p className="text-xs text-gray-600 whitespace-pre-wrap">Notes (media location, etc.): {idea.notes}</p>}
+              <div className="flex flex-wrap items-center gap-3">
+                <button type="button" disabled={missing.includes('caption')} onClick={() => void handlePacketCopy('caption')} className="text-xs text-accent hover:underline disabled:opacity-40">Copy caption</button>
+                <button type="button" onClick={() => void handlePacketCopy('link')} className="text-xs text-accent hover:underline">Copy link</button>
+                <button type="button" disabled={missing.includes('caption')} onClick={() => void handlePacketCopy('both')} className="text-xs text-accent hover:underline disabled:opacity-40">Copy caption + link</button>
+                {packetCopy && packetCopy !== 'failed' && <span className="text-xs text-gray-500">Copied</span>}
+                {packetCopy === 'failed' && <span className="text-xs text-red-400">Copy failed</span>}
+              </div>
+              {!published && onMarkPosted && (
+                <div className="flex items-center gap-3">
+                  <button type="button" disabled={markState === 'marking'} onClick={() => void handleMarkPublished()} className="text-xs text-green-700 hover:underline disabled:opacity-40">
+                    {markState === 'marking' ? 'Marking...' : 'Mark published'}
+                  </button>
+                  {markState === 'failed' && <span className="text-xs text-red-700">Failed, retry</span>}
+                </div>
+              )}
+            </div>
+          )
+        })()}
 
         <input
           className="bg-surface border border-border rounded-lg px-4 py-2 text-gray-900 text-sm w-full"
@@ -277,6 +380,8 @@ export default function IdeaDetailModal({ idea, onClose, onSave, activeExperimen
             Part of experiment: {activeExperiment.hypothesis}
           </label>
         )}
+
+        {saveFailed && <p className="text-xs text-red-700">Save failed. Your edits are still here; try again.</p>}
 
         <button
           onClick={() => void handleSave()}

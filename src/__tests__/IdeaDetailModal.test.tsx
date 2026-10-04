@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react'
 import IdeaDetailModal from '@/components/IdeaDetailModal'
 import type { ContentIdea } from '@/types/content'
 
@@ -240,5 +240,100 @@ describe('IdeaDetailModal', () => {
     fireEvent.click(screen.getByRole('button', { name: /save/i }))
 
     expect(onSave).toHaveBeenCalledWith('idea-1', expect.objectContaining({ experiment_id: 'exp-1' }))
+  })
+})
+
+describe('IdeaDetailModal publish packet', () => {
+  const ready: ContentIdea = { ...idea, status: 'READY', body: 'Hit your lifts.' }
+  const writeText = vi.fn().mockResolvedValue(undefined)
+
+  beforeEach(() => {
+    writeText.mockClear()
+    localStorage.clear()
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
+  })
+
+  const open = (i: ContentIdea, extra: Record<string, unknown> = {}) =>
+    render(<IdeaDetailModal idea={i} onClose={() => {}} onSave={async () => {}} {...extra} />)
+
+  it('shows the packet for a READY idea and not for an IDEA', () => {
+    open(ready)
+    expect(screen.getByText('Publish packet')).toBeTruthy()
+    cleanup()
+    open(idea)
+    expect(screen.queryByText('Publish packet')).toBeNull()
+  })
+
+  it('copies caption, link, and caption+link', async () => {
+    open(ready)
+    fireEvent.click(screen.getByRole('button', { name: 'Copy caption' }))
+    await waitFor(() => expect(writeText).toHaveBeenLastCalledWith('Hit your lifts.'))
+    fireEvent.click(screen.getByRole('button', { name: 'Copy caption + link' }))
+    await waitFor(() => expect(writeText).toHaveBeenLastCalledWith(expect.stringMatching(/^Hit your lifts\.\n\nhttps:\/\/.*content_idea_id=idea-1/)))
+  })
+
+  it('a missing caption is called out and the caption copies are disabled', () => {
+    open({ ...ready, body: null })
+    expect(screen.getByText(/add a caption/i)).toBeTruthy()
+    expect((screen.getByRole('button', { name: 'Copy caption' }) as HTMLButtonElement).disabled).toBe(true)
+  })
+
+  it('Mark published calls onMarkPosted with the idea id', async () => {
+    const onMarkPosted = vi.fn().mockResolvedValue(undefined)
+    open(ready, { onMarkPosted })
+    fireEvent.click(screen.getByRole('button', { name: 'Mark published' }))
+    await waitFor(() => expect(onMarkPosted).toHaveBeenCalledWith('idea-1'))
+  })
+
+  it('a failed Mark published says so and can be retried', async () => {
+    const onMarkPosted = vi.fn().mockRejectedValueOnce(new Error('network')).mockResolvedValueOnce(undefined)
+    open(ready, { onMarkPosted })
+    fireEvent.click(screen.getByRole('button', { name: 'Mark published' }))
+    await waitFor(() => expect(screen.getByText(/failed, retry/i)).toBeTruthy())
+    fireEvent.click(screen.getByRole('button', { name: 'Mark published' }))
+    await waitFor(() => expect(onMarkPosted).toHaveBeenCalledTimes(2))
+  })
+
+  it('a posted idea shows Published with its date and an honest inquiry label, and no Mark published button', () => {
+    const posted = { ...ready, status: 'POSTED' as const, posted_at: '2026-10-03T18:00:00Z' }
+    open({ ...posted, inquiry_count: null } as ContentIdea)
+    expect(screen.getByText(/published/i)).toBeTruthy()
+    expect(screen.getByText(/Inquiries: unavailable/)).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Mark published' })).toBeNull()
+  })
+})
+
+describe('IdeaDetailModal save failure and draft recovery', () => {
+  beforeEach(() => { localStorage.clear() })
+
+  it('a failed save shows a message, keeps the modal open and the edits intact', async () => {
+    const onClose = vi.fn()
+    const onSave = vi.fn().mockRejectedValue(new Error('network'))
+    render(<IdeaDetailModal idea={idea} onClose={onClose} onSave={onSave} />)
+    fireEvent.change(screen.getByDisplayValue('Original body'), { target: { value: 'My edit' } })
+    fireEvent.click(screen.getByRole('button', { name: /save/i }))
+    await waitFor(() => expect(screen.getByText(/save failed/i)).toBeTruthy())
+    expect(onClose).not.toHaveBeenCalled()
+    expect(screen.getByDisplayValue('My edit')).toBeTruthy()
+  })
+
+  it('unsaved edits are restored when the modal reopens, and Discard returns to the saved text', () => {
+    const first = render(<IdeaDetailModal idea={idea} onClose={() => {}} onSave={async () => {}} />)
+    fireEvent.change(screen.getByDisplayValue('Original body'), { target: { value: 'Unsaved edit' } })
+    first.unmount()
+    render(<IdeaDetailModal idea={idea} onClose={() => {}} onSave={async () => {}} />)
+    expect(screen.getByDisplayValue('Unsaved edit')).toBeTruthy()
+    expect(screen.getByText(/restored unsaved edits/i)).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: /discard/i }))
+    expect(screen.getByDisplayValue('Original body')).toBeTruthy()
+    expect(screen.queryByText(/restored unsaved edits/i)).toBeNull()
+  })
+
+  it('a successful save clears the draft', async () => {
+    const first = render(<IdeaDetailModal idea={idea} onClose={() => {}} onSave={async () => {}} />)
+    fireEvent.change(screen.getByDisplayValue('Original body'), { target: { value: 'Saved edit' } })
+    fireEvent.click(screen.getByRole('button', { name: /save/i }))
+    await waitFor(() => expect(localStorage.getItem('content:idea-draft:idea-1')).toBeNull())
+    first.unmount()
   })
 })

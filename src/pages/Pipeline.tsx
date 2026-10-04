@@ -10,7 +10,7 @@ import { useExperiments } from '@/hooks/useExperiments'
 import type { ContentIdea } from '@/types/content'
 
 export default function Pipeline() {
-  const { grouped, loading, moveStage, scheduleIdea, remove } = usePipeline()
+  const { grouped, loading, moveStage, scheduleIdea, markPosted, remove } = usePipeline()
   const { update } = useIdeas()
   const { active: activeExperiment } = useExperiments()
   const [selectedIdea, setSelectedIdea] = useState<ContentIdea | null>(null)
@@ -69,6 +69,7 @@ export default function Pipeline() {
           idea={selectedIdea}
           onClose={() => setSelectedIdea(null)}
           onSave={update}
+          onMarkPosted={markPosted}
           activeExperiment={activeExperiment}
         />
       )}
