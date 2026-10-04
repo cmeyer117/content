@@ -59,15 +59,25 @@ export function IdeasProvider({ children }: { children: ReactNode }) {
   // an in-progress edit every time an unrelated realtime event fired.
   const load = useCallback(async (background = false) => {
     if (!background) setLoading(true)
-    const [ideasRes, perfRes, inquiryCounts] = await Promise.all([
-      supabase.from('content_ideas').select('*').order('created_at', { ascending: false }),
-      supabase.from('content_post_performance').select('*'),
-      loadInquiryCounts(),
-    ])
-    if (ideasRes.error) setError(ideasRes.error.message)
-    else if (perfRes.error) setError(perfRes.error.message)
-    else setIdeas(joinPerformances((ideasRes.data as ContentIdea[]) ?? [], (perfRes.data as PostPerformance[]) ?? [], inquiryCounts))
-    setLoading(false)
+    try {
+      // loadInquiryCounts never throws (a failed read resolves to null, shown as "unavailable"), so it is safe inside the same Promise.all.
+      const [ideasRes, perfRes, inquiryCounts] = await Promise.all([
+        supabase.from('content_ideas').select('*').order('created_at', { ascending: false }),
+        supabase.from('content_post_performance').select('*'),
+        loadInquiryCounts(),
+      ])
+      if (ideasRes.error) throw ideasRes.error
+      if (perfRes.error) throw perfRes.error
+      setIdeas(joinPerformances((ideasRes.data as ContentIdea[]) ?? [], (perfRes.data as PostPerformance[]) ?? [], inquiryCounts))
+      setError(null)
+    } catch (err) {
+      const message = typeof err === 'object' && err !== null && 'message' in err
+        ? String((err as { message: unknown }).message)
+        : String(err)
+      setError(message)
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => { void load() }, [load])

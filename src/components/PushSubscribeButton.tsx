@@ -21,7 +21,8 @@ export default function PushSubscribeButton() {
     const canPush = 'serviceWorker' in navigator && 'PushManager' in window
     const alreadySubscribed = localStorage.getItem('content_push_subscribed_v2')
     const denied = canPush && Notification.permission === 'denied'
-    setVisible(canPush && !alreadySubscribed && !denied)
+    setVisible(canPush && !denied)
+    if (alreadySubscribed) setLabel('Refresh Notifications')
   }, [])
 
   if (!visible) return null
@@ -37,6 +38,8 @@ export default function PushSubscribeButton() {
         return
       }
       const reg = await navigator.serviceWorker.ready
+      const existing = await reg.pushManager.getSubscription()
+      if (existing) await existing.unsubscribe()
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),

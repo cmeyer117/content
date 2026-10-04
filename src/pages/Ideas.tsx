@@ -42,7 +42,7 @@ const empty: NewContentIdea = {
 }
 
 export default function Ideas() {
-  const { ideas, loading, add, update, remove } = useIdeas()
+  const { ideas, loading, error, refresh, add, update, remove } = useIdeas()
   const { moveStage, scheduleIdea } = usePipeline()
   const { active: activeExperiment } = useExperiments()
   const [form, setForm] = useState<NewContentIdea>(empty)
@@ -68,6 +68,7 @@ export default function Ideas() {
   return (
     <div className="max-w-3xl mx-auto flex flex-col gap-8">
       <h1 className="text-2xl font-bold text-gray-900">Ideas</h1>
+      {error && <div role="alert" className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800">Could not load ideas: {error} <button className="ml-2 underline" onClick={() => void refresh()}>Retry</button></div>}
 
       <NextPostBrief ideas={ideas} />
 

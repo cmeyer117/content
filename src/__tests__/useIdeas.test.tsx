@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { renderHook, waitFor, act } from '@testing-library/react'
 import { useIdeas, IdeasProvider } from '@/hooks/useIdeas'
+import { supabase } from '@/lib/supabase'
 
 const realtimeHandlers: Array<() => void> = []
 const deferredResolvers: Array<(v: { data: unknown[]; error: null }) => void> = []
@@ -40,6 +41,19 @@ describe('useIdeas', () => {
       wrapper: ({ children }) => <IdeasProvider>{children}</IdeasProvider>,
     })
     expect(result.current.ideas).toEqual([])
+  })
+
+  it('exposes read failures and clears them after a successful retry', async () => {
+    vi.mocked(supabase.from)
+      .mockReturnValueOnce({ select: () => ({ order: async () => ({ data: null, error: { message: 'database unavailable' } }) }) } as never)
+      .mockReturnValueOnce({ select: async () => ({ data: null, error: null }) } as never)
+    const { result } = renderHook(() => useIdeas(), {
+      wrapper: ({ children }) => <IdeasProvider>{children}</IdeasProvider>,
+    })
+    await waitFor(() => expect(result.current.error).toBe('database unavailable'))
+    await act(async () => { await result.current.refresh() })
+    expect(result.current.error).toBeNull()
+    expect(result.current.loading).toBe(false)
   })
 
   // Regression: a realtime postgres_changes event used to call load() the
