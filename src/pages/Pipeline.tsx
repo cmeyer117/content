@@ -30,6 +30,9 @@ export default function Pipeline() {
 
   if (loading) return <p className="text-gray-600 text-sm">Loading...</p>
 
+  // The modal gets the LIVE idea (so Mark published refreshes its status, date and counts); the selection is only an id.
+  const liveIdea = selectedIdea ? [...grouped.values()].flat().find(i => i.id === selectedIdea.id) : undefined
+
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold text-gray-900">Pipeline</h1>
@@ -66,7 +69,8 @@ export default function Pipeline() {
       </div>
       {selectedIdea && (
         <IdeaDetailModal
-          idea={selectedIdea}
+          key={selectedIdea.id}
+          idea={liveIdea ?? selectedIdea}
           onClose={() => setSelectedIdea(null)}
           onSave={update}
           onMarkPosted={markPosted}

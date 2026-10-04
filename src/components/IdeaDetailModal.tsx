@@ -17,6 +17,12 @@ type Props = {
 const PACKET_STATUSES = ['READY', 'SCHEDULED', 'POSTED', 'TRACKED']
 const publishedFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
 
+// A malformed posted_at would make Intl throw a RangeError and take the whole modal down; omit the date instead.
+function formatPublished(iso: string): string {
+  const t = Date.parse(iso)
+  return Number.isNaN(t) ? '' : ' ' + publishedFormatter.format(t)
+}
+
 function clampScore(raw: string): number | null {
   if (raw.trim() === '') return null
   const n = Math.round(Number(raw))
@@ -34,19 +40,19 @@ export default function IdeaDetailModal({ idea, onClose, onSave, activeExperimen
   const [title, setTitle] = useState(initialDraft?.title ?? idea.title)
   const [hook, setHook] = useState(initialDraft?.hook ?? idea.hook ?? '')
   const [contentClass, setContentClass] = useState<ContentClass | ''>(idea.content_class ?? '')
-  const [hookFirst2s, setHookFirst2s] = useState(idea.hook_first_2s ?? '')
-  const [viewerPayoff, setViewerPayoff] = useState(idea.viewer_payoff ?? '')
+  const [hookFirst2s, setHookFirst2s] = useState(initialDraft?.hookFirst2s ?? idea.hook_first_2s ?? '')
+  const [viewerPayoff, setViewerPayoff] = useState(initialDraft?.viewerPayoff ?? idea.viewer_payoff ?? '')
   const [targetLength, setTargetLength] = useState(idea.target_length_seconds?.toString() ?? '')
-  const [lengthJustification, setLengthJustification] = useState(idea.length_justification ?? '')
-  const [diaryJustification, setDiaryJustification] = useState(idea.diary_justification ?? '')
+  const [lengthJustification, setLengthJustification] = useState(initialDraft?.lengthJustification ?? idea.length_justification ?? '')
+  const [diaryJustification, setDiaryJustification] = useState(initialDraft?.diaryJustification ?? idea.diary_justification ?? '')
   const [body, setBody] = useState(initialDraft?.body ?? idea.body ?? '')
   const [notes, setNotes] = useState(initialDraft?.notes ?? idea.notes ?? '')
   const [pillar, setPillar] = useState<Pillar>(idea.pillar)
   const [platform, setPlatform] = useState<Platform>(idea.platform)
   const [ideaScore, setIdeaScore] = useState(idea.idea_score?.toString() ?? '')
-  const [ideaScoreNotes, setIdeaScoreNotes] = useState(idea.idea_score_notes ?? '')
+  const [ideaScoreNotes, setIdeaScoreNotes] = useState(initialDraft?.ideaScoreNotes ?? idea.idea_score_notes ?? '')
   const [executionScore, setExecutionScore] = useState(idea.execution_score?.toString() ?? '')
-  const [executionScoreNotes, setExecutionScoreNotes] = useState(idea.execution_score_notes ?? '')
+  const [executionScoreNotes, setExecutionScoreNotes] = useState(initialDraft?.executionScoreNotes ?? idea.execution_score_notes ?? '')
   const [saving, setSaving] = useState(false)
   const [experimentTagged, setExperimentTagged] = useState(idea.experiment_id === activeExperiment?.id && activeExperiment !== null)
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle')
@@ -55,16 +61,22 @@ export default function IdeaDetailModal({ idea, onClose, onSave, activeExperimen
   const [markState, setMarkState] = useState<'idle' | 'marking' | 'failed' | 'done'>('idle')
 
   useEffect(() => {
-    const draft = { title, hook, body, notes }
+    const draft = { title, hook, body, notes, hookFirst2s, viewerPayoff, lengthJustification, diaryJustification, ideaScoreNotes, executionScoreNotes }
     if (draftDiffersFrom(draft, idea)) saveDraft(idea.id, draft)
     else clearDraft(idea.id)
-  }, [title, hook, body, notes, idea])
+  }, [title, hook, body, notes, hookFirst2s, viewerPayoff, lengthJustification, diaryJustification, ideaScoreNotes, executionScoreNotes, idea])
 
   const discardDraft = () => {
     setTitle(idea.title)
     setHook(idea.hook ?? '')
     setBody(idea.body ?? '')
     setNotes(idea.notes ?? '')
+    setHookFirst2s(idea.hook_first_2s ?? '')
+    setViewerPayoff(idea.viewer_payoff ?? '')
+    setLengthJustification(idea.length_justification ?? '')
+    setDiaryJustification(idea.diary_justification ?? '')
+    setIdeaScoreNotes(idea.idea_score_notes ?? '')
+    setExecutionScoreNotes(idea.execution_score_notes ?? '')
     clearDraft(idea.id)
     setRestored(false)
   }
@@ -174,7 +186,7 @@ export default function IdeaDetailModal({ idea, onClose, onSave, activeExperimen
               <p className="text-xs font-medium text-gray-700">Publish packet</p>
               <p className="text-xs text-gray-600">
                 {published
-                  ? `Published${status.publishedAt ? ' ' + publishedFormatter.format(new Date(status.publishedAt)) : markState === 'done' ? ' just now' : ''}`
+                  ? `Published${status.publishedAt ? formatPublished(status.publishedAt) : markState === 'done' ? ' just now' : ''}`
                   : 'Ready to post'}
                 {status.inquiries ? ` · ${status.inquiries}` : ''}
                 {' · '}{idea.platform}

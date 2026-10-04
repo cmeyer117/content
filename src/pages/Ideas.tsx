@@ -152,6 +152,7 @@ export default function Ideas() {
       )}
       {selectedIdea && (
         <IdeaDetailModal
+          key={selectedIdea.id}
           idea={selectedIdea}
           onClose={() => setSelectedIdea(null)}
           onSave={update}

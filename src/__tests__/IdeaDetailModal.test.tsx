@@ -294,6 +294,23 @@ describe('IdeaDetailModal publish packet', () => {
     await waitFor(() => expect(onMarkPosted).toHaveBeenCalledTimes(2))
   })
 
+  it('a malformed posted_at does not crash the modal; it just omits the date', () => {
+    const posted = { ...ready, status: 'POSTED' as const, posted_at: 'not-a-date' }
+    open(posted)
+    expect(screen.getByText(/published/i)).toBeTruthy()
+    expect(screen.getByText('Publish packet')).toBeTruthy()
+  })
+
+  it('after Mark published, a refreshed idea prop shows the persisted date and count', async () => {
+    const onMarkPosted = vi.fn().mockResolvedValue(undefined)
+    const view = open(ready, { onMarkPosted })
+    fireEvent.click(screen.getByRole('button', { name: 'Mark published' }))
+    await waitFor(() => expect(screen.getByText(/published just now/i)).toBeTruthy())
+    view.rerender(<IdeaDetailModal idea={{ ...ready, status: 'POSTED', posted_at: '2026-10-03T18:00:00Z', inquiry_count: 3 } as ContentIdea} onClose={() => {}} onSave={async () => {}} onMarkPosted={onMarkPosted} />)
+    expect(screen.getByText(/Inquiries: 3/)).toBeTruthy()
+    expect(screen.queryByText(/just now/i)).toBeNull()
+  })
+
   it('a posted idea shows Published with its date and an honest inquiry label, and no Mark published button', () => {
     const posted = { ...ready, status: 'POSTED' as const, posted_at: '2026-10-03T18:00:00Z' }
     open({ ...posted, inquiry_count: null } as ContentIdea)
@@ -327,6 +344,14 @@ describe('IdeaDetailModal save failure and draft recovery', () => {
     fireEvent.click(screen.getByRole('button', { name: /discard/i }))
     expect(screen.getByDisplayValue('Original body')).toBeTruthy()
     expect(screen.queryByText(/restored unsaved edits/i)).toBeNull()
+  })
+
+  it('recovers hook-first brief edits too (IDEA status shows the brief)', () => {
+    const first = render(<IdeaDetailModal idea={idea} onClose={() => {}} onSave={async () => {}} />)
+    fireEvent.change(screen.getByPlaceholderText(/opening hook/i), { target: { value: 'Brief edit' } })
+    first.unmount()
+    render(<IdeaDetailModal idea={idea} onClose={() => {}} onSave={async () => {}} />)
+    expect(screen.getByDisplayValue('Brief edit')).toBeTruthy()
   })
 
   it('a successful save clears the draft', async () => {
