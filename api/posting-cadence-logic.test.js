@@ -99,6 +99,13 @@ describe('buildNudgeMessage', () => {
     expect(msg.url).toBeUndefined()
   })
 
+  it('null means the READY list could not be read: say nothing about approved ideas', () => {
+    const msg = buildNudgeMessage(null)
+    expect(msg.body).toBe('No content posted today. Open Content Manager.')
+    expect(msg.body).not.toContain('Nothing approved yet')
+    expect(msg.url).toBeUndefined()
+  })
+
   it('tolerates a non-array (failed fetch) as zero READY', () => {
     const msg = buildNudgeMessage(undefined)
     expect(msg.body).toContain('Nothing approved yet')

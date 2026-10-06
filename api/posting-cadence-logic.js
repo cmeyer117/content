@@ -27,6 +27,8 @@ export function pickTopReadyIdea(readyRows) {
 // posts, not IDEA — the raw idea pile is huge and demotivating, and it is
 // not what Carl should be picking from at 8pm.
 export function buildNudgeMessage(readyRows) {
+  // null = the READY list could not be read (a failed read, not an empty list): say nothing about approved ideas.
+  if (readyRows === null) return { body: 'No content posted today. Open Content Manager.' };
   const rows = Array.isArray(readyRows) ? readyRows : [];
   const top = pickTopReadyIdea(rows);
   if (!top) {
