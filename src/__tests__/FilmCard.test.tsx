@@ -86,7 +86,10 @@ describe('FilmCard', () => {
     expect(within(missing).getByText('Hook shot')).toBeTruthy()
     await user.click(screen.getByRole('button', { name: 'Mark ready to edit' }))
     expect(screen.getByText(/missing a take/i)).toBeTruthy()
-    await waitFor(() => expect(store.savePacket.mock.calls.at(-1)![2].state).toBe('ready_to_edit'))
+    await waitFor(() => {
+      const calls = store.savePacket.mock.calls
+      expect(calls[calls.length - 1][2].state).toBe('ready_to_edit')
+    })
     expect(idea.status).toBe('READY')
   })
 
