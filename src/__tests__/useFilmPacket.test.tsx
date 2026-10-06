@@ -1,3 +1,4 @@
+import { StrictMode } from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, waitFor, act } from '@testing-library/react'
 import { useFilmPacket } from '@/hooks/useFilmPacket'
@@ -90,6 +91,20 @@ describe('useFilmPacket', () => {
     // the resumed edits are sent to the server on their own
     await waitFor(() => expect(store.savePacket).toHaveBeenCalled())
     await waitFor(() => expect(result.current.sync).toBe('saved'))
+  })
+
+  it('under StrictMode (two overlapping opens) a resumed draft is saved exactly once', async () => {
+    const draft: FilmDraft = { baseVersion: 1, shots: [{ ...shot('a'), filmed: true }], state: 'filming' }
+    const later = <T,>(value: T, ms: number) => new Promise<T>(r => setTimeout(() => r(value), ms))
+    // first open reads fast and starts the save; the second open's read lands while that save is still in flight
+    store.getPacket.mockReturnValueOnce(Promise.resolve(server(1))).mockReturnValueOnce(later(server(1), 30))
+    store.readDraft.mockReturnValue(draft)
+    store.savePacket.mockImplementation(() => later({ ok: true, packet: server(2, draft.shots) }, 90))
+    const { result } = renderHook(() => useFilmPacket(idea), { wrapper: StrictMode })
+    await waitFor(() => expect(store.savePacket).toHaveBeenCalled())
+    await new Promise(r => setTimeout(r, 300))
+    await waitFor(() => expect(result.current.sync).toBe('saved'))
+    expect(store.savePacket).toHaveBeenCalledTimes(1)
   })
 
   it('enters conflict when someone else saved first; Keep mine re-saves on the new version', async () => {

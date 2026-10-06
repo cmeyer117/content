@@ -71,11 +71,18 @@ export function useFilmPacket(idea: SeedIdea) {
     }
   }, [ideaId])
 
+  // Only the newest open() may apply its result. StrictMode (and a reload mid-save) overlap two opens; letting the older
+  // one land replaced `latest` while a save was in flight, so the loop saw "changed since sent" and saved the same content twice.
+  const openSeq = useRef(0)
+
   const open = useCallback(async () => {
+    const seq = ++openSeq.current
     setLoad('loading')
     try {
       let server = await getPacket(ideaId)
+      if (seq !== openSeq.current) return
       if (!server) server = await createPacket(ideaId, seedShots(ideaRef.current))
+      if (seq !== openSeq.current) return
       const draft = readDraft(ideaId)
       const res = resolveOpen(server, draft)
       blocked.current = false
@@ -104,7 +111,7 @@ export function useFilmPacket(idea: SeedIdea) {
       }
       setLoad('ready')
     } catch {
-      setLoad('error')
+      if (seq === openSeq.current) setLoad('error')
     }
   }, [ideaId, adopt])
 
