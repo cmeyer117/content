@@ -9,6 +9,7 @@ import Pipeline from './pages/Pipeline'
 import Analytics from './pages/Analytics'
 import Intel from './pages/Intel'
 import PublishQueue from './pages/PublishQueue'
+import Film from './pages/Film'
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
             <Route path="/ideas" element={<Ideas />} />
             <Route path="/pipeline" element={<Pipeline />} />
             <Route path="/queue" element={<PublishQueue />} />
+            <Route path="/film" element={<Film />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/intel" element={<Intel />} />
           </Routes>
