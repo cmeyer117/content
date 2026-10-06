@@ -66,21 +66,25 @@ export default function AuthGate({ children }: { children: ReactNode }) {
           <h1 className="text-lg font-bold text-gray-900 mb-2">Content Manager &mdash; sign in</h1>
           <input
             type="email"
+            aria-label="Email"
             placeholder="Email"
             autoComplete="username"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="px-3 py-2 rounded border border-border bg-surface text-sm outline-none"
+            className="px-3 py-2 rounded border border-border bg-surface text-sm outline-none focus:border-accent"
           />
           <input
             type="password"
+            aria-label="Password"
             placeholder="Password"
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="px-3 py-2 rounded border border-border bg-surface text-sm outline-none"
+            className="px-3 py-2 rounded border border-border bg-surface text-sm outline-none focus:border-accent"
           />
-          {error && <div className="text-red-500 text-xs">{error}</div>}
+          {/* role="alert": a screen reader announces a failed sign-in as it appears (placeholders are not labels; the inputs above
+              have aria-labels, and outline-none is replaced by a visible focus border). Codex audit 2026-10-06, finding 6. */}
+          {error && <div role="alert" className="text-red-500 text-xs">{error}</div>}
           <button type="submit" className="px-3 py-2 rounded bg-accent text-white text-sm font-bold">
             Sign in
           </button>
