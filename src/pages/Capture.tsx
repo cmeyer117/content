@@ -12,15 +12,24 @@ export default function Capture() {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [lastFile, setLastFile] = useState<File | null>(null)
+  const [listing, setListing] = useState(true)
+  const [listError, setListError] = useState<string | null>(null)
 
   const refresh = useCallback(async () => {
-    const { data, error: listError } = await supabase.storage.from('raw-captures').list()
-    if (listError || !data) return
-    setPending(
-      data
-        .map(o => ({ name: o.name, createdAt: new Date(o.created_at ?? Date.now()) }))
-        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-    )
+    setListing(true)
+    try {
+      const { data, error: readError } = await supabase.storage.from('raw-captures').list()
+      if (readError) throw readError
+      if (!data) throw new Error('Capture list unavailable')
+      setPending(data.map(o => ({ name: o.name, createdAt: new Date(o.created_at ?? Date.now()) }))
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()))
+      setListError(null)
+    } catch (err) {
+      const message = typeof err === 'object' && err !== null && 'message' in err ? String(err.message) : String(err)
+      setListError(`Could not check waiting captures: ${message}`)
+    } finally {
+      setListing(false)
+    }
   }, [])
 
   useEffect(() => {
@@ -31,17 +40,23 @@ export default function Capture() {
     setUploading(true)
     setError(null)
     setLastFile(file)
-    const objectName = captureObjectName(file)
-    const { error: uploadError } = await supabase.storage
-      .from('raw-captures')
-      .upload(objectName, file, { upsert: false, contentType: file.type })
-    setUploading(false)
-    if (uploadError) {
-      setError(`Upload failed: ${uploadError.message}`)
-      return
+    try {
+      const objectName = captureObjectName(file)
+      const { error: uploadError } = await supabase.storage
+        .from('raw-captures')
+        .upload(objectName, file, { upsert: false, contentType: file.type })
+      if (uploadError) {
+        setError(`Upload failed: ${uploadError.message}`)
+        return
+      }
+      setLastFile(null)
+      await refresh()
+    } catch (err) {
+      const message = typeof err === 'object' && err !== null && 'message' in err ? String(err.message) : String(err)
+      setError(`Upload not confirmed: ${message}. Check the waiting list before retrying.`)
+    } finally {
+      setUploading(false)
     }
-    setLastFile(null)
-    await refresh()
   }, [refresh])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,7 +107,13 @@ export default function Capture() {
         <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
           Waiting for next sweep
         </p>
-        {pending.length === 0 ? (
+        {listError ? (
+          <div role="alert" className="text-sm text-red-700">
+            {listError} <button type="button" disabled={listing} onClick={() => { void refresh() }} className="underline">Check again</button>
+          </div>
+        ) : listing ? (
+          <p className="text-sm text-gray-400">Checking waiting captures...</p>
+        ) : pending.length === 0 ? (
           <p className="text-sm text-gray-400">Nothing waiting.</p>
         ) : (
           <ul className="flex flex-col gap-2">

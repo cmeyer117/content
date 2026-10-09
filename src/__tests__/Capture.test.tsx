@@ -22,6 +22,37 @@ beforeEach(() => {
 })
 
 describe('Capture', () => {
+  it('does not claim an empty queue when the storage listing is denied', async () => {
+    listMock.mockResolvedValue({ data: null, error: { message: 'Permission denied' } })
+    render(<Capture />)
+    expect((await screen.findByRole('alert')).textContent).toMatch(/permission denied/i)
+    expect(screen.queryByText(/nothing waiting/i)).toBeNull()
+  })
+
+  it('recovers the upload control and retains the selected file when the SDK throws', async () => {
+    listMock.mockResolvedValue({ data: [], error: null })
+    uploadMock.mockRejectedValueOnce(new Error('Connection lost'))
+    render(<Capture />)
+    const file = new File(['x'], 'take.mp4', { type: 'video/mp4' })
+    fireEvent.change(screen.getByLabelText(/upload a take/i), { target: { files: [file] } })
+    expect(await screen.findByText(/upload not confirmed/i)).toBeTruthy()
+    expect((screen.getByLabelText(/upload a take/i) as HTMLInputElement).disabled).toBe(false)
+    uploadMock.mockResolvedValue({ error: null })
+    fireEvent.click(screen.getByRole('button', { name: /retry/i }))
+    await waitFor(() => expect(uploadMock).toHaveBeenCalledTimes(2))
+    expect(uploadMock.mock.calls[1][1]).toBe(file)
+  })
+
+  it('lets a failed queue read recover without retrying an upload', async () => {
+    listMock.mockRejectedValueOnce(new Error('Offline')).mockResolvedValueOnce({ data: [], error: null })
+    render(<Capture />)
+    expect((await screen.findByRole('alert')).textContent).toMatch(/offline/i)
+    fireEvent.click(screen.getByRole('button', { name: /check again/i }))
+    expect(await screen.findByText(/nothing waiting/i)).toBeTruthy()
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(uploadMock).not.toHaveBeenCalled()
+  })
+
   it('shows an empty state when nothing is waiting', async () => {
     listMock.mockResolvedValue({ data: [], error: null })
     render(<Capture />)
